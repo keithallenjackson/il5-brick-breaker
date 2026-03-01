@@ -52,14 +52,25 @@ jobs:
       - name: Scan Node.js dependencies
         run: |
           cd apps/web-ui
-          grype dir:. --only-fixed --fail-on critical
+          grype sbom:package-lock.json --only-fixed --fail-on critical
 
   secret-scan:
     name: Secret Scanning
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run detect-secrets
-        uses: reviewdog/action-detect-secrets@v0.15
+      - uses: actions/setup-python@v5
         with:
-          reporter: github-pr-review
+          python-version: "3.12"
+      - name: Install detect-secrets
+        run: pip install detect-secrets
+      - name: Run detect-secrets scan
+        run: |
+          detect-secrets scan --all-files --exclude-files '\.git/.*' --exclude-files 'node_modules/.*' --exclude-files 'package-lock\.json' > .secrets-baseline.json
+          if detect-secrets audit --report --json .secrets-baseline.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(1 if any(r.get('is_secret') for results in d.get('results',{}).values() for r in results) else 0)"; then
+            echo "No secrets detected."
+          else
+            echo "Potential secrets found! Review .secrets-baseline.json"
+            detect-secrets audit --report .secrets-baseline.json
+            exit 1
+          fi

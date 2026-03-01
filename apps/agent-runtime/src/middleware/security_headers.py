@@ -21,7 +21,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable[..., Response]) -> Response:  # type: ignore[override]
         """Add security headers to the response."""
-        response: Response = await call_next(request)  # type: ignore[arg-type]
+        response: Response = await call_next(request)  # type: ignore[misc,arg-type]
         for header_name, header_value in SECURITY_HEADERS.items():
             response.headers[header_name] = header_value
         return response

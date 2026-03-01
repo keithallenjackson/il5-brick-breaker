@@ -10,7 +10,10 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "composite": true,
+    "noEmit": false,
+    "outDir": "./dist-node",
+    "declaration": true
   },
   "include": ["vite.config.ts", "vitest.config.ts", "eslint.config.js"]
 }

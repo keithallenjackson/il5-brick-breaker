@@ -122,6 +122,10 @@ jobs:
           python-version: "3.12"
       - name: Install trestle
         run: pip install compliance-trestle
+      - name: Initialize trestle workspace
+        run: |
+          mkdir -p .trestle
+          echo '{"trestle-version": "3.0.0"}' > .trestle/config.json
       - name: Validate component definitions
         run: |
           for f in apps/*/component-definition.yaml; do
@@ -134,9 +138,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install Kyverno CLI
+        run: |
+          curl -sL https://github.com/kyverno/kyverno/releases/latest/download/kyverno-cli_v1.13.4_linux_x86_64.tar.gz | tar xz
+          sudo mv kyverno /usr/local/bin/
       - name: Validate Kyverno policies
-        uses: kyverno/action-install-cli@v0.2
-      - run: |
+        run: |
           for f in policies/kyverno/*.yaml; do
             echo "Validating $f"
             kyverno validate policy "$f"

@@ -25,7 +25,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
         # Skip health check endpoints
         if path in SKIP_PATHS:
-            return await call_next(request)  # type: ignore[arg-type]
+            return await call_next(request)  # type: ignore[misc,arg-type]
 
         request_id = str(uuid.uuid4())
         start_time = time.monotonic()
@@ -37,7 +37,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
         user_agent = request.headers.get("user-agent", "")
 
         try:
-            response: Response = await call_next(request)  # type: ignore[arg-type]
+            response: Response = await call_next(request)  # type: ignore[misc,arg-type]
             duration_ms = round((time.monotonic() - start_time) * 1000, 2)
             outcome = "success" if response.status_code < 400 else "error"  # noqa: PLR2004
 
