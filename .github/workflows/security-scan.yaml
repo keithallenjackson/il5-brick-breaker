@@ -38,7 +38,7 @@ jobs:
           grype dir:. --only-fixed --fail-on critical
 
   sca-typescript:
-    name: SCA TypeScript (Grype)
+    name: SCA TypeScript (npm audit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,12 +47,10 @@ jobs:
           node-version: "22"
       - name: Install dependencies
         run: cd apps/web-ui && npm ci
-      - name: Install Grype
-        uses: anchore/scan-action/download-grype@v4
-      - name: Scan Node.js dependencies
+      - name: Audit Node.js dependencies
         run: |
           cd apps/web-ui
-          grype dir:. --only-fixed --fail-on critical
+          npm audit --audit-level=critical
 
   secret-scan:
     name: Secret Scanning
