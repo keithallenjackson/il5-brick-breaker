@@ -88,7 +88,7 @@ function Leaderboard({ onBack }: LeaderboardProps) {
     setError('');
     try {
       const data = await getLeaderboard(20);
-      setEntries(data.entries);
+      setEntries(data.scores);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

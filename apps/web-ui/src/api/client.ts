@@ -33,7 +33,8 @@ export interface LeaderboardEntry {
 }
 
 export interface LeaderboardResponse {
-  entries: LeaderboardEntry[];
+  scores: LeaderboardEntry[];
+  total_count: number;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {

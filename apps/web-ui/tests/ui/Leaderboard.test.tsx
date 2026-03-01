@@ -26,7 +26,7 @@ describe('Leaderboard', () => {
 
   it('should render leaderboard data', async () => {
     mockGetLeaderboard.mockResolvedValue({
-      entries: [
+      scores: [
         {
           id: '1',
           player_name: 'Alice',
@@ -63,7 +63,7 @@ describe('Leaderboard', () => {
   });
 
   it('should show empty state', async () => {
-    mockGetLeaderboard.mockResolvedValue({ entries: [] });
+    mockGetLeaderboard.mockResolvedValue({ scores: [] });
 
     render(<Leaderboard {...defaultProps} />);
 
