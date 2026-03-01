@@ -1,0 +1,35 @@
+# OSCAL-CONTROL: CM-8 (Information System Component Inventory)
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-labels
+  annotations:
+    policies.kyverno.io/title: Require Kubernetes Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/description: >-
+      Ensures all workload resources have required Kubernetes
+      recommended labels for inventory tracking and management.
+    nist-800-53: CM-8
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-app-labels
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - Service
+      validate:
+        message: >-
+          Labels 'app.kubernetes.io/name', 'app.kubernetes.io/part-of',
+          and 'app.kubernetes.io/managed-by' are required on all
+          Deployments, StatefulSets, and Services.
+        pattern:
+          metadata:
+            labels:
+              app.kubernetes.io/name: "?*"
+              app.kubernetes.io/part-of: "project-sentinel"
+              app.kubernetes.io/managed-by: "?*"

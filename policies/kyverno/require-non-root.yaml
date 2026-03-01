@@ -1,0 +1,36 @@
+# OSCAL-CONTROL: AC-6 (Least Privilege), CM-7 (Least Functionality)
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-non-root
+  annotations:
+    policies.kyverno.io/title: Require Non-Root Containers
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/description: >-
+      Enforces that all containers run as non-root users (UID >= 1001).
+      This implements the principle of least privilege for container
+      workloads in DoD IL5 environments.
+    nist-800-53: AC-6, CM-7
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: >-
+          Containers must run as non-root. Set
+          spec.securityContext.runAsNonRoot to true and
+          spec.securityContext.runAsUser to >= 1001.
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: ">=1001"
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false

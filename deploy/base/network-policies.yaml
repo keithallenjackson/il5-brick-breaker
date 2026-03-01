@@ -1,0 +1,142 @@
+# Default deny all ingress and egress in the brick-breaker namespace
+# OSCAL-CONTROL: SC-7, AC-4
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: brick-breaker
+  labels:
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow web-ui to receive traffic from the ingress controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-ui-ingress
+  namespace: brick-breaker
+  labels:
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: web-ui
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+# Allow agent-runtime to receive traffic from ingress and connect to PostgreSQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-agent-runtime
+  namespace: brick-breaker
+  labels:
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: agent-runtime
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: web-ui
+      ports:
+        - port: 8000
+          protocol: TCP
+  egress:
+    # Allow connection to PostgreSQL
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgresql
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# Allow web-ui to resolve DNS and proxy API requests to agent-runtime
+# OSCAL-CONTROL: SC-7, AC-4
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-ui-egress
+  namespace: brick-breaker
+  labels:
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: web-ui
+  policyTypes:
+    - Egress
+  egress:
+    # Allow proxy to agent-runtime
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: agent-runtime
+      ports:
+        - port: 8000
+          protocol: TCP
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# Allow PostgreSQL to receive connections from agent-runtime only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgresql
+  namespace: brick-breaker
+  labels:
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: agent-runtime
+      ports:
+        - port: 5432
+          protocol: TCP

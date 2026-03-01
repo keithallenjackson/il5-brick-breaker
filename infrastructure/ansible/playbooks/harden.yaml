@@ -1,0 +1,67 @@
+# OSCAL-CONTROL: CM-6 (Configuration Settings), SC-13 (Cryptographic Protection)
+---
+- name: Apply STIG Baseline Hardening
+  hosts: all
+  become: true
+
+  roles:
+    - role: stig-baseline
+
+  tasks:
+    - name: Enable FIPS mode
+      ansible.builtin.command: fips-mode-setup --enable
+      when: ansible_fips is not defined or not ansible_fips
+      notify: reboot
+
+    - name: Ensure auditd is running
+      ansible.builtin.systemd:
+        name: auditd
+        state: started
+        enabled: true
+
+    - name: Configure audit rules for security events
+      ansible.builtin.copy:
+        dest: /etc/audit/rules.d/99-brick-breaker.rules
+        content: |
+          # Log all authentication events
+          -w /var/log/faillog -p wa -k logins
+          -w /var/log/lastlog -p wa -k logins
+          # Log privilege escalation
+          -w /etc/sudoers -p wa -k privilege-escalation
+          -w /etc/sudoers.d/ -p wa -k privilege-escalation
+          # Log file system changes
+          -a always,exit -F arch=b64 -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=4294967295 -k delete
+        owner: root
+        group: root
+        mode: "0640"
+      notify: restart auditd
+
+    - name: Harden SSH configuration
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
+        - { regexp: "^#?PasswordAuthentication", line: "PasswordAuthentication no" }
+        - { regexp: "^#?X11Forwarding", line: "X11Forwarding no" }
+        - { regexp: "^#?MaxAuthTries", line: "MaxAuthTries 3" }
+        - { regexp: "^#?ClientAliveInterval", line: "ClientAliveInterval 300" }
+        - { regexp: "^#?ClientAliveCountMax", line: "ClientAliveCountMax 0" }
+        - { regexp: "^#?Protocol", line: "Protocol 2" }
+      notify: restart sshd
+
+  handlers:
+    - name: reboot
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+
+    - name: restart auditd
+      ansible.builtin.systemd:
+        name: auditd
+        state: restarted
+
+    - name: restart sshd
+      ansible.builtin.systemd:
+        name: sshd
+        state: restarted

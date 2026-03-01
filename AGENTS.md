@@ -1,4 +1,4 @@
-# AGENTS.md — Project Sentinel
+# AGENTS.md — Agentic-AI-Brick-Breaker
 
 > Agentic AI Platform for DoD IL5 Environments with Automated RMF/eMASS Compliance
 
@@ -8,7 +8,7 @@ This file is the authoritative guide for any AI coding agent working in this rep
 
 ## Project Identity
 
-**Project Sentinel** is a containerized, Kubernetes-native agentic AI platform designed for deployment into DoD Impact Level 5 (CUI/NSS) environments. The platform hosts mission-specific AI agents that connect to enterprise tools via Model Context Protocol (MCP), with compliance artifacts generated automatically from the codebase and infrastructure definitions.
+**Agentic-AI-Brick-Breaker** is a containerized, Kubernetes-native agentic AI platform designed for deployment into DoD Impact Level 5 (CUI/NSS) environments. The platform hosts mission-specific AI agents that connect to enterprise tools via Model Context Protocol (MCP), with compliance artifacts generated automatically from the codebase and infrastructure definitions.
 
 The system must achieve and maintain a Continuous Authority to Operate (cATO) posture. Every line of code, every infrastructure definition, and every configuration change is a compliance artifact.
 

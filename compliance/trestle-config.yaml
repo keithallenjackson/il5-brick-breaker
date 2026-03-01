@@ -1,0 +1,12 @@
+# Compliance-trestle workspace configuration
+trestle:
+  workspace:
+    root: .
+  directories:
+    catalogs: catalogs
+    profiles: profiles
+    component-definitions: component-definitions
+    system-security-plans: system-security-plan
+    assessment-plans: assessment-plans
+    assessment-results: assessment-results
+    plan-of-action-and-milestones: poam

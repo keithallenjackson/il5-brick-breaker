@@ -1,0 +1,92 @@
+component-definition:
+  uuid: "f3a1b2c3-d4e5-6f78-9a0b-1c2d3e4f5a6b"
+  metadata:
+    title: "Web UI"
+    version: "0.1.0"
+    oscal-version: "1.1.2"
+    last-modified: "2026-02-28T00:00:00Z"
+  components:
+    - uuid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      type: "software"
+      title: "Brick Breaker Web UI"
+      description: >
+        React 19 + TypeScript single-page application served via nginx.
+        Provides the game interface and communicates with the backend API
+        for score submission and leaderboard retrieval.
+      control-implementations:
+        - uuid: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+          source: "../../compliance/profiles/dod-il5.json"
+          description: "DoD IL5 profile implementation"
+          implemented-requirements:
+            - uuid: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+              control-id: "si-10"
+              description: >
+                Input validation is implemented on all user-facing form fields.
+                The score submission form validates player_name against a pattern
+                of allowed characters (alphanumeric, spaces, hyphens, underscores)
+                with a maximum length of 50 characters. Client-side validation
+                mirrors server-side validation rules defined in the agent-runtime
+                API. Input validation is performed in src/ui/GameOverScreen.tsx
+                using regex pattern matching before submission to the backend API.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "d4e5f6a7-b8c9-0123-defa-234567890123"
+              control-id: "sc-8"
+              description: >
+                Transport confidentiality is enforced via nginx configuration.
+                The nginx.conf includes Strict-Transport-Security header with
+                max-age=31536000 and includeSubDomains directive, ensuring all
+                communications use HTTPS/TLS. The CSP header restricts resource
+                loading to same-origin. API proxy requests to the backend are
+                forwarded over the internal cluster network secured by mTLS
+                via the service mesh.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "e5f6a7b8-c9d0-1234-efab-345678901234"
+              control-id: "cm-7"
+              description: >
+                Least functionality is enforced through the multi-stage
+                Dockerfile. The production image uses Iron Bank hardened
+                nginx 1.27 base image with only the static built assets
+                and nginx configuration. No build tools, source code, or
+                development dependencies are included in the production
+                container. The container runs as non-root user (UID 1001).
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "f6a7b8c9-d0e1-2345-fabc-456789012345"
+              control-id: "ac-6"
+              description: >
+                Least privilege is enforced at the container level. The
+                Dockerfile specifies USER 1001 to run nginx as a non-root
+                user. The nginx configuration listens on unprivileged port
+                8080. No capabilities beyond those required for serving
+                static files and proxying API requests are granted.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "a7b8c9d0-e1f2-3456-abcd-567890123456"
+              control-id: "sc-6"
+              description: >
+                Resource availability is supported through nginx gzip
+                compression for static assets, aggressive caching of
+                hashed assets (1 year expiry with immutable flag), and
+                no-cache directives for index.html to ensure clients
+                always receive the latest version. Container resource
+                limits are enforced via Kubernetes manifests in deploy/.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "b8c9d0e1-f2a3-4567-bcde-678901234567"
+              control-id: "sc-13"
+              description: >
+                Cryptographic protection is provided through TLS termination
+                at the ingress layer and HSTS enforcement via nginx security
+                headers. The Content-Security-Policy header restricts script
+                execution to same-origin sources, mitigating injection attacks.
+                All API communication uses the cluster's mTLS-secured network.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"

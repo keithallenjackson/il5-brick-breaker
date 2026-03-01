@@ -1,0 +1,34 @@
+# OSCAL-CONTROL: SA-12 (Supply Chain Protection), CM-7 (Least Functionality)
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-registries
+  annotations:
+    policies.kyverno.io/title: Restrict Image Registries to Iron Bank
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/description: >-
+      Only allows container images from the DoD Iron Bank registry
+      (registry1.dso.mil). This ensures all images are hardened
+      and approved for use in DoD environments.
+    nist-800-53: SA-12, CM-7
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-image-registry
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: >-
+          Container images must come from Iron Bank
+          (registry1.dso.mil/ironbank/*). Image '{{request.object.spec.containers[].image}}'
+          is not from an approved registry.
+        pattern:
+          spec:
+            containers:
+              - image: "registry1.dso.mil/ironbank/*"
+            =(initContainers):
+              - image: "registry1.dso.mil/ironbank/*"

@@ -1,0 +1,68 @@
+name: Compliance Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-oscal:
+    name: Validate OSCAL Documents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install compliance-trestle
+        run: pip install compliance-trestle
+      - name: Validate all OSCAL documents
+        run: ./scripts/compliance/validate-oscal.sh
+
+  check-c2p-mapping:
+    name: Check Compliance-to-Policy Mapping
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify policy-to-control mappings
+        run: |
+          echo "Checking that all Kyverno policies have NIST 800-53 control annotations..."
+          for f in policies/kyverno/*.yaml; do
+            if ! grep -q "nist-800-53:" "$f"; then
+              echo "ERROR: $f missing nist-800-53 annotation"
+              exit 1
+            fi
+          done
+          echo "All policies have control mappings."
+
+          echo "Checking OPA policies have control comments..."
+          for f in policies/opa/pipeline/*.rego; do
+            if ! grep -q "OSCAL-CONTROL:" "$f"; then
+              echo "ERROR: $f missing OSCAL-CONTROL comment"
+              exit 1
+            fi
+          done
+          echo "All OPA policies have control mappings."
+
+  generate-ssp:
+    name: Generate SSP
+    runs-on: ubuntu-latest
+    needs: [validate-oscal]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install compliance-trestle
+        run: pip install compliance-trestle
+      - name: Generate SSP from component definitions
+        run: ./scripts/compliance/generate-ssp.sh
+      - name: Upload SSP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-security-plan
+          path: compliance/system-security-plan/

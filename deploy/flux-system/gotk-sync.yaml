@@ -1,0 +1,89 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: brick-breaker
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/your-org/agentic-ai-brick-breaker
+  ref:
+    branch: main
+  secretRef:
+    name: flux-git-credentials
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: brick-breaker-dev
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./deploy/overlays/dev
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: brick-breaker
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: agent-runtime
+      namespace: brick-breaker
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: web-ui
+      namespace: brick-breaker
+    - apiVersion: apps/v1
+      kind: StatefulSet
+      name: postgresql
+      namespace: brick-breaker
+  timeout: 5m
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: brick-breaker-staging
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./deploy/overlays/staging
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: brick-breaker
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: agent-runtime
+      namespace: brick-breaker
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: web-ui
+      namespace: brick-breaker
+  timeout: 5m
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: brick-breaker-production
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./deploy/overlays/production
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: brick-breaker
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: agent-runtime
+      namespace: brick-breaker
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: web-ui
+      namespace: brick-breaker
+    - apiVersion: apps/v1
+      kind: StatefulSet
+      name: postgresql
+      namespace: brick-breaker
+  timeout: 10m

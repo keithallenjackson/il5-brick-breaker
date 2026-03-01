@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-ui
+  namespace: brick-breaker
+  labels:
+    app.kubernetes.io/name: web-ui
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: web-ui
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
