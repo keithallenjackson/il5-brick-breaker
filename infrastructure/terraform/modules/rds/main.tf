@@ -119,6 +119,9 @@ resource "aws_db_instance" "main" {
   # Deletion protection for production
   deletion_protection = var.environment == "production" ? true : false
 
+  # Audit logging (AU-2, AU-3)
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+
   # Performance insights
   performance_insights_enabled = true
 

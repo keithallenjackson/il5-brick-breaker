@@ -23,6 +23,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to registry
+        if: ${{ secrets.REGISTRY_USERNAME != '' }}
         uses: docker/login-action@v3
         with:
           registry: registry1.dso.mil
@@ -33,7 +34,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: apps/agent-runtime
-          push: true
+          push: ${{ secrets.REGISTRY_USERNAME != '' }}
+          load: ${{ secrets.REGISTRY_USERNAME == '' }}
           tags: |
             ${{ env.REGISTRY }}/agent-runtime:${{ github.sha }}
             ${{ env.REGISTRY }}/agent-runtime:latest
@@ -47,9 +49,11 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Install Cosign
+        if: ${{ secrets.REGISTRY_USERNAME != '' }}
         uses: sigstore/cosign-installer@v3
 
       - name: Sign image
+        if: ${{ secrets.REGISTRY_USERNAME != '' }}
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/agent-runtime:${{ github.sha }}
 
@@ -70,6 +74,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to registry
+        if: ${{ secrets.REGISTRY_USERNAME != '' }}
         uses: docker/login-action@v3
         with:
           registry: registry1.dso.mil
@@ -80,7 +85,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: apps/web-ui
-          push: true
+          push: ${{ secrets.REGISTRY_USERNAME != '' }}
+          load: ${{ secrets.REGISTRY_USERNAME == '' }}
           tags: |
             ${{ env.REGISTRY }}/web-ui:${{ github.sha }}
             ${{ env.REGISTRY }}/web-ui:latest
@@ -94,9 +100,11 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Install Cosign
+        if: ${{ secrets.REGISTRY_USERNAME != '' }}
         uses: sigstore/cosign-installer@v3
 
       - name: Sign image
+        if: ${{ secrets.REGISTRY_USERNAME != '' }}
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/web-ui:${{ github.sha }}
 
