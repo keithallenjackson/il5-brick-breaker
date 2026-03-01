@@ -1,0 +1,120 @@
+component-definition:
+  uuid: d4f1e2a3-b5c6-4d7e-8f9a-0b1c2d3e4f5a
+  metadata:
+    title: Brick Breaker API Service Component Definition
+    version: "0.1.0"
+    oscal-version: "1.1.2"
+    last-modified: "2024-01-01T00:00:00Z"
+    published: "2024-01-01T00:00:00Z"
+    parties:
+      - uuid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        type: organization
+        name: Brick Breaker Development Team
+  components:
+    - uuid: b2c3d4e5-f6a7-8901-bcde-f12345678901
+      type: software
+      title: Brick Breaker API Service
+      description: >-
+        FastAPI-based REST API service for the Brick Breaker game application.
+        Provides score submission, leaderboard retrieval, and health check endpoints
+        with comprehensive audit logging, input validation, and security controls.
+      control-implementations:
+        - uuid: c3d4e5f6-a7b8-9012-cdef-123456789012
+          source: https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json
+          description: NIST SP 800-53 Rev 5 control implementation for the Brick Breaker API Service
+          implemented-requirements:
+            - uuid: d4e5f6a7-b8c9-0123-defa-234567890123
+              control-id: AU-2
+              description: >-
+                Audit Events - The Brick Breaker API Service implements comprehensive audit
+                logging via the AuditMiddleware (src/middleware/audit.py). The middleware captures
+                audit events for all API requests including: HTTP method, resource path, response
+                status code, client IP address, user agent, and request duration. Health check
+                endpoints (/healthz, /readyz) are excluded from audit logging to reduce noise.
+                Audit events are emitted as structured JSON via the structlog library.
+
+            - uuid: e5f6a7b8-c9d0-1234-efab-345678901234
+              control-id: AU-3
+              description: >-
+                Content of Audit Records - Each audit log entry produced by AuditMiddleware
+                (src/middleware/audit.py) contains the following fields: timestamp (UTC ISO 8601
+                format), user_identity (currently "anonymous"), action (HTTP method), resource
+                (URL path), outcome ("success" or "error"), status_code (HTTP response code),
+                source_ip (from X-Forwarded-For header or direct client IP), user_agent
+                (browser/client identifier), request_id (unique UUID4 per request), and
+                duration_ms (request processing time in milliseconds).
+
+            - uuid: f6a7b8c9-d0e1-2345-fabc-456789012345
+              control-id: AU-8
+              description: >-
+                Time Stamps - The AuditMiddleware (src/middleware/audit.py) generates timestamps
+                using Python's datetime.now(UTC) to ensure all audit records use UTC timezone.
+                Timestamps are formatted in ISO 8601 format for consistent, machine-parseable
+                time representation across all audit log entries. The created_at field in the
+                Score model (src/db/models.py) uses server_default=func.now() for database-level
+                timestamping.
+
+            - uuid: a7b8c9d0-e1f2-3456-abcd-567890123456
+              control-id: SI-10
+              description: >-
+                Information Input Validation - All API inputs are validated using Pydantic v2
+                schemas defined in src/schemas.py. The ScoreSubmission schema enforces:
+                player_name must be 1-50 characters matching pattern ^[a-zA-Z0-9_ -]+$ (preventing
+                injection attacks), score must be between 0 and 999,999,999, and level_reached
+                must be between 1 and 9,999. Query parameters for the leaderboard endpoint are
+                validated with ge/le constraints (limit 1-100, offset >= 0). Invalid inputs
+                receive HTTP 422 responses with detailed validation error messages.
+
+            - uuid: b8c9d0e1-f2a3-4567-bcde-678901234567
+              control-id: SC-8
+              description: >-
+                Transmission Confidentiality and Integrity - The SecurityHeadersMiddleware
+                (src/middleware/security_headers.py) enforces Strict-Transport-Security with
+                max-age=31536000 and includeSubDomains directive, ensuring all communications
+                use HTTPS in production. Additional security headers include X-Content-Type-Options:
+                nosniff, X-Frame-Options: DENY, Content-Security-Policy for API-appropriate
+                restrictions, and Referrer-Policy: strict-origin-when-cross-origin.
+
+            - uuid: c9d0e1f2-a3b4-5678-cdef-789012345678
+              control-id: CM-7
+              description: >-
+                Least Functionality - The API service is built as a minimal container image
+                using Iron Bank's hardened Python 3.12 base image (registry1.dso.mil/ironbank).
+                The Dockerfile runs the application as non-root user (UID 1001), disables Python
+                bytecode generation (PYTHONDONTWRITEBYTECODE=1), and only exposes the required
+                port (8000). The application only includes endpoints necessary for game
+                functionality: score submission, leaderboard retrieval, and health checks.
+                CORS is configured to restrict origins to explicitly allowed domains via
+                the CORS_ORIGINS setting (src/config.py).
+
+            - uuid: d0e1f2a3-b4c5-6789-defa-890123456789
+              control-id: AC-6
+              description: >-
+                Least Privilege - The container runs as a non-root user (UID 1001) as specified
+                in the Dockerfile. File ownership is explicitly set with --chown=1001:1001 for
+                all copied files. The database connection uses parameterized queries via
+                SQLAlchemy ORM (src/db/repository.py) to prevent SQL injection. The application
+                operates with minimal database permissions required for CRUD operations on the
+                scores table.
+
+            - uuid: e1f2a3b4-c5d6-7890-efab-901234567890
+              control-id: SC-6
+              description: >-
+                Resource Availability - The application includes health check endpoints for
+                liveness (/healthz) and readiness (/readyz) probes defined in
+                src/routes/health.py. The readiness probe verifies database connectivity by
+                executing a SELECT 1 query, returning HTTP 503 if the database is unavailable.
+                The Dockerfile configures a HEALTHCHECK with 30-second intervals, 3-second
+                timeout, and 3 retries. Query parameters enforce limits (max 100 records per
+                request) to prevent resource exhaustion on the leaderboard endpoint.
+
+            - uuid: f2a3b4c5-d6e7-8901-fabc-012345678901
+              control-id: SI-6
+              description: >-
+                Software, Firmware, and Information Integrity - Database migrations are managed
+                through Alembic (alembic/versions/0001_create_scores_table.py), ensuring
+                schema integrity and version-controlled database changes. The application uses
+                Pydantic v2 for strict data validation on both input (ScoreSubmission) and
+                output (ScoreResponse) with from_attributes mode for ORM model validation.
+                SQLAlchemy mapped columns enforce database-level type constraints (String(50),
+                Integer, DateTime with timezone) in src/db/models.py.
