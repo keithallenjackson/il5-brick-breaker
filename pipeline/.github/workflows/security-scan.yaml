@@ -1,0 +1,65 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/python
+            p/typescript
+            p/owasp-top-ten
+            p/security-audit
+
+  sca-python:
+    name: SCA Python (Grype)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Grype
+        uses: anchore/scan-action/download-grype@v4
+      - name: Scan Python dependencies
+        run: |
+          cd apps/agent-runtime
+          grype dir:. --only-fixed --fail-on critical
+
+  sca-typescript:
+    name: SCA TypeScript (Grype)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: cd apps/web-ui && npm ci
+      - name: Install Grype
+        uses: anchore/scan-action/download-grype@v4
+      - name: Scan Node.js dependencies
+        run: |
+          cd apps/web-ui
+          grype dir:. --only-fixed --fail-on critical
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run detect-secrets
+        uses: reviewdog/action-detect-secrets@v0.15
+        with:
+          reporter: github-pr-review

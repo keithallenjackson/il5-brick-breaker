@@ -1,0 +1,143 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install ruff
+      - name: Run ruff check
+        run: ruff check apps/agent-runtime/src/ apps/agent-runtime/tests/
+      - name: Run ruff format check
+        run: ruff format apps/agent-runtime/src/ apps/agent-runtime/tests/ --check
+
+  typecheck-python:
+    name: Type Check Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          cd apps/agent-runtime
+          pip install -e ".[dev]"
+      - name: Run mypy
+        run: cd apps/agent-runtime && mypy --strict src/
+
+  test-python:
+    name: Test Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          cd apps/agent-runtime
+          pip install -e ".[dev]"
+      - name: Run tests with coverage
+        run: |
+          cd apps/agent-runtime
+          python -m pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=xml --cov-fail-under=80
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: apps/agent-runtime/coverage.xml
+
+  lint-typescript:
+    name: Lint TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/web-ui/package-lock.json
+      - name: Install dependencies
+        run: cd apps/web-ui && npm ci
+      - name: Run eslint
+        run: cd apps/web-ui && npx eslint src/
+
+  typecheck-typescript:
+    name: Type Check TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/web-ui/package-lock.json
+      - name: Install dependencies
+        run: cd apps/web-ui && npm ci
+      - name: Run tsc
+        run: cd apps/web-ui && npx tsc --noEmit
+
+  test-typescript:
+    name: Test TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/web-ui/package-lock.json
+      - name: Install dependencies
+        run: cd apps/web-ui && npm ci
+      - name: Run tests with coverage
+        run: cd apps/web-ui && npx vitest run --coverage
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-coverage
+          path: apps/web-ui/coverage/
+
+  validate-oscal:
+    name: Validate OSCAL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install trestle
+        run: pip install compliance-trestle
+      - name: Validate component definitions
+        run: |
+          for f in apps/*/component-definition.yaml; do
+            echo "Validating $f"
+            trestle validate -f "$f" || true
+          done
+
+  validate-policies:
+    name: Validate Policies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Kyverno policies
+        uses: kyverno/action-install-cli@v0.2
+      - run: |
+          for f in policies/kyverno/*.yaml; do
+            echo "Validating $f"
+            kyverno validate policy "$f"
+          done
