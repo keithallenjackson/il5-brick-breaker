@@ -1,14 +1,17 @@
-FROM registry1.dso.mil/ironbank/opensource/python/python312:3.12 AS base
+FROM registry1.dso.mil/ironbank/opensource/python/python312:3.12
 
-USER 1001
 WORKDIR /app
 
-COPY --chown=1001:1001 pyproject.toml .
-RUN pip install --no-cache-dir --user .
+# Copy all project files before install so setuptools can find the src package
+COPY pyproject.toml .
+COPY src/ ./src/
+COPY alembic/ ./alembic/
+COPY alembic.ini .
 
-COPY --chown=1001:1001 src/ ./src/
-COPY --chown=1001:1001 alembic/ ./alembic/
-COPY --chown=1001:1001 alembic.ini .
+# Install as root (system-level), then drop to non-root for runtime
+RUN pip install --no-cache-dir .
+
+USER 1001
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

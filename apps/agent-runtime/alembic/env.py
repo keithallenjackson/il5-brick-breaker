@@ -1,6 +1,7 @@
 """Alembic async migration environment configuration."""
 
 import asyncio
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -12,6 +13,10 @@ from src.db.models import Base
 
 # Alembic Config object
 config = context.config
+
+# Override database URL from environment variable if set (for K8s / container use)
+if db_url := os.environ.get("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", db_url)
 
 # Set up logging from alembic.ini
 if config.config_file_name is not None:

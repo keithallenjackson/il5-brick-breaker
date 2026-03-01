@@ -3,8 +3,8 @@ FROM registry1.dso.mil/ironbank/opensource/nodejs/nodejs22:22 AS builder
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --ignore-scripts
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
 
 COPY tsconfig.json tsconfig.node.json vite.config.ts ./
 COPY src/ src/
