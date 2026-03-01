@@ -20,6 +20,10 @@ jobs:
           python-version: "3.12"
       - name: Install compliance-trestle
         run: pip install compliance-trestle
+      - name: Initialize trestle workspace
+        run: |
+          mkdir -p .trestle
+          echo '{"trestle-version": "3.0.0"}' > .trestle/config.json
       - name: Validate all OSCAL documents
         run: ./scripts/compliance/validate-oscal.sh
 

@@ -1,0 +1,100 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/python
+            p/typescript
+            p/owasp-top-ten
+            p/security-audit
+
+  sca-python:
+    name: SCA Python (Grype)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Grype
+        uses: anchore/scan-action/download-grype@v4
+      - name: Scan Python dependencies
+        run: |
+          cd apps/agent-runtime
+          grype dir:. --only-fixed --fail-on critical
+
+  sca-typescript:
+    name: SCA TypeScript (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: cd apps/web-ui && npm ci
+      - name: Audit Node.js dependencies
+        run: |
+          cd apps/web-ui
+          npm audit --audit-level=critical
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install detect-secrets
+        run: pip install detect-secrets
+      - name: Run detect-secrets scan
+        run: |
+          detect-secrets scan --all-files \
+            --exclude-files '\.git/.*' \
+            --exclude-files 'node_modules/.*' \
+            --exclude-files 'package-lock\.json' \
+            --exclude-files '\.secrets.*' \
+            > .secrets-baseline.json
+          # Filter out known false positives: dev-only default DB URLs and K8s secret name references
+          python3 -c "
+          import json, sys
+          with open('.secrets-baseline.json') as f:
+              data = json.load(f)
+          false_positive_files = {
+              'apps/agent-runtime/alembic.ini',
+              'apps/agent-runtime/src/config.py',
+          }
+          false_positive_types = {'Secret Keyword'}
+          results = data.get('results', {})
+          real_secrets = {}
+          for filepath, findings in results.items():
+              filtered = [
+                  f for f in findings
+                  if filepath not in false_positive_files
+                  and not all(t in false_positive_types for t in f.get('type', '').split(','))
+              ]
+              if filtered:
+                  real_secrets[filepath] = filtered
+          if real_secrets:
+              print('Potential secrets found:')
+              for fp, findings in real_secrets.items():
+                  for finding in findings:
+                      print(f'  {fp}:{finding.get(\"line_number\",\"?\")}: {finding.get(\"type\",\"unknown\")}')
+              sys.exit(1)
+          print('No real secrets detected (false positives filtered).')
+          "
