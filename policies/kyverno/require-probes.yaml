@@ -1,0 +1,36 @@
+# OSCAL-CONTROL: SI-6 (Security Function Verification)
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-probes
+  annotations:
+    policies.kyverno.io/title: Require Liveness and Readiness Probes
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/description: >-
+      Ensures all containers have liveness and readiness probes
+      configured for health monitoring and automatic recovery.
+    nist-800-53: SI-6
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-probes
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+      validate:
+        message: >-
+          All containers must have livenessProbe and readinessProbe
+          configured for health monitoring.
+        pattern:
+          spec:
+            template:
+              spec:
+                containers:
+                  - livenessProbe:
+                      "?(httpGet | exec | tcpSocket | grpc)": "*"
+                    readinessProbe:
+                      "?(httpGet | exec | tcpSocket | grpc)": "*"

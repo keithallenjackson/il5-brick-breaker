@@ -1,0 +1,35 @@
+# OSCAL-CONTROL: SC-28 (Protection of Information at Rest)
+# Enforce encryption at rest for all storage resources
+
+import "tfplan/v2" as tfplan
+
+# All EBS volumes must use AES-256 encryption
+ebs_volumes_encrypted = rule {
+    all tfplan.resource_changes as _, rc {
+        rc.type is "aws_ebs_volume" implies
+            rc.change.after.encrypted is true
+    }
+}
+
+# All RDS instances must have storage encryption enabled
+rds_encrypted = rule {
+    all tfplan.resource_changes as _, rc {
+        rc.type is "aws_db_instance" implies
+            rc.change.after.storage_encrypted is true
+    }
+}
+
+# All S3 buckets must have server-side encryption
+s3_encrypted = rule {
+    all tfplan.resource_changes as _, rc {
+        rc.type is "aws_s3_bucket" implies
+            length(rc.change.after.server_side_encryption_configuration) > 0
+    }
+}
+
+# Main rule: all storage must be encrypted
+main = rule {
+    ebs_volumes_encrypted and
+    rds_encrypted and
+    s3_encrypted
+}

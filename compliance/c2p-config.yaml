@@ -1,0 +1,56 @@
+# Compliance-to-Policy (C2P) mapping configuration
+# Maps OSCAL controls to Kyverno and OPA policy files
+c2p:
+  version: "1.0.0"
+  mappings:
+    # Kyverno policy mappings
+    - control-id: cm-8
+      policy-type: kyverno
+      policy-file: policies/kyverno/require-labels.yaml
+      description: "Component inventory via Kubernetes label requirements"
+
+    - control-id: sa-12
+      policy-type: kyverno
+      policy-file: policies/kyverno/restrict-registries.yaml
+      description: "Supply chain protection via Iron Bank registry restriction"
+
+    - control-id: cm-7
+      policy-type: kyverno
+      policy-file: policies/kyverno/restrict-registries.yaml
+      description: "Least functionality via approved image sources only"
+
+    - control-id: ac-6
+      policy-type: kyverno
+      policy-file: policies/kyverno/require-non-root.yaml
+      description: "Least privilege via non-root container enforcement"
+
+    - control-id: sc-6
+      policy-type: kyverno
+      policy-file: policies/kyverno/require-resource-limits.yaml
+      description: "Resource availability via CPU/memory limits"
+
+    - control-id: si-6
+      policy-type: kyverno
+      policy-file: policies/kyverno/require-probes.yaml
+      description: "Security function verification via health probes"
+
+    # OPA pipeline policy mappings
+    - control-id: si-7
+      policy-type: opa
+      policy-file: policies/opa/pipeline/require-signed-images.rego
+      description: "Software integrity via container image signing"
+
+    - control-id: si-2
+      policy-type: opa
+      policy-file: policies/opa/pipeline/no-critical-cves.rego
+      description: "Flaw remediation via CVE blocking"
+
+    - control-id: ra-5
+      policy-type: opa
+      policy-file: policies/opa/pipeline/no-critical-cves.rego
+      description: "Vulnerability monitoring via automated scanning"
+
+    - control-id: cm-6
+      policy-type: opa
+      policy-file: policies/opa/pipeline/stig-pass-threshold.rego
+      description: "Configuration settings via STIG compliance threshold"

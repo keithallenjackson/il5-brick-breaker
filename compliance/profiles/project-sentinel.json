@@ -1,0 +1,52 @@
+{
+  "profile": {
+    "uuid": "a1b2c3d4-5678-9abc-def0-123456789abc",
+    "metadata": {
+      "title": "Project Sentinel - Brick Breaker IL5 Profile",
+      "version": "1.0.0",
+      "oscal-version": "1.1.2",
+      "last-modified": "2026-02-28T00:00:00Z",
+      "remarks": "Project-specific OSCAL profile that imports the DoD IL5 baseline and tailors it for the Brick Breaker game application. AI/ML and MCP-specific controls are marked as not applicable since this is a game application, not an AI agent platform."
+    },
+    "imports": [
+      {
+        "href": "dod-il5.json",
+        "include-controls": [
+          {
+            "with-ids": [
+              "ac-2", "ac-3", "ac-4", "ac-6",
+              "au-2", "au-3", "au-8",
+              "cm-2", "cm-3", "cm-6", "cm-7", "cm-8",
+              "cp-10",
+              "ia-2", "ia-5",
+              "ra-5",
+              "sa-5", "sa-11", "sa-12", "sa-15",
+              "sc-6", "sc-7", "sc-8", "sc-13", "sc-28",
+              "si-2", "si-6", "si-7", "si-10", "si-11"
+            ]
+          }
+        ]
+      }
+    ],
+    "modify": {
+      "set-parameters": [],
+      "alters": [
+        {
+          "control-id": "ac-2",
+          "adds": [
+            {
+              "position": "after",
+              "props": [
+                {
+                  "name": "implementation-status",
+                  "value": "not-applicable"
+                }
+              ],
+              "remarks": "The Brick Breaker application uses anonymous score submission and does not implement user account management. No authentication is required to play the game or submit scores."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
