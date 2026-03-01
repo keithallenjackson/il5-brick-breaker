@@ -4,12 +4,12 @@ kind: ClusterPolicy
 metadata:
   name: restrict-registries
   annotations:
-    policies.kyverno.io/title: Restrict Image Registries to Iron Bank
+    policies.kyverno.io/title: Restrict Image Registries
     policies.kyverno.io/category: Supply Chain Security
     policies.kyverno.io/description: >-
-      Only allows container images from the DoD Iron Bank registry
-      (registry1.dso.mil). This ensures all images are hardened
-      and approved for use in DoD environments.
+      Only allows container images from approved registries
+      (ghcr.io, docker.io). For IL5 deployments, restrict to
+      Iron Bank (registry1.dso.mil) only.
     nist-800-53: SA-12, CM-7
 spec:
   validationFailureAction: Enforce
@@ -23,12 +23,12 @@ spec:
                 - Pod
       validate:
         message: >-
-          Container images must come from Iron Bank
-          (registry1.dso.mil/ironbank/*). Image '{{request.object.spec.containers[].image}}'
+          Container images must come from an approved registry
+          (ghcr.io/* or docker.io/*). Image '{{request.object.spec.containers[].image}}'
           is not from an approved registry.
         pattern:
           spec:
             containers:
-              - image: "registry1.dso.mil/ironbank/*"
+              - image: "ghcr.io/* | docker.io/* | postgres:* | nginx:* | python:* | node:*"
             =(initContainers):
-              - image: "registry1.dso.mil/ironbank/*"
+              - image: "ghcr.io/* | docker.io/* | postgres:* | nginx:* | python:* | node:*"

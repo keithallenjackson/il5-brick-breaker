@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: web-ui
-          image: registry1.dso.mil/ironbank/brick-breaker/web-ui:latest
+          image: ghcr.io/keithallenjackson/il5-brick-breaker/web-ui:latest
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

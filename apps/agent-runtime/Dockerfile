@@ -1,4 +1,4 @@
-FROM registry1.dso.mil/ironbank/opensource/python/python312:3.12
+FROM python:3.12-slim
 
 WORKDIR /app
 

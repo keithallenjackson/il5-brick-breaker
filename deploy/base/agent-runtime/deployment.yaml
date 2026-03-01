@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: db-migrate
-          image: registry1.dso.mil/ironbank/brick-breaker/agent-runtime:latest
+          image: ghcr.io/keithallenjackson/il5-brick-breaker/agent-runtime:latest
           command: ["python", "-m", "alembic", "upgrade", "head"]
           env:
             - name: DATABASE_URL
@@ -57,7 +57,7 @@ spec:
               memory: 128Mi
       containers:
         - name: agent-runtime
-          image: registry1.dso.mil/ironbank/brick-breaker/agent-runtime:latest
+          image: ghcr.io/keithallenjackson/il5-brick-breaker/agent-runtime:latest
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
