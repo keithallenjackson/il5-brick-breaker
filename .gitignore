@@ -16,6 +16,7 @@ htmlcov/
 node_modules/
 dist/
 .next/
+.vite/
 *.tsbuildinfo
 
 # Build
@@ -50,6 +51,9 @@ Thumbs.db
 credentials.json
 secrets.yaml
 *.sealed-secret.yaml
+
+# SQLite dev databases
+*.db
 
 # Logs
 *.log
