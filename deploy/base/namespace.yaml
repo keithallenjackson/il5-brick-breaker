@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: brick-breaker
+  labels:
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
