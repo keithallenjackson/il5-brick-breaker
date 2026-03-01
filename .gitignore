@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+*.egg
+
+# Node.js
+node_modules/
+dist/
+.next/
+*.tsbuildinfo
+
+# Build
+build/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+
+# Secrets - NEVER commit these
+*.pem
+*.key
+credentials.json
+secrets.yaml
+*.sealed-secret.yaml
+
+# Logs
+*.log

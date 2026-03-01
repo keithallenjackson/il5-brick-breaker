@@ -1,0 +1,51 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: no-commit-to-branch
+        args: ["--branch", "main"]
+        stages: [commit]
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args: ["--strict"]
+        additional_dependencies:
+          - fastapi
+          - pydantic
+          - pydantic-settings
+          - sqlalchemy
+          - structlog
+
+  - repo: local
+    hooks:
+      - id: validate-oscal
+        name: Validate OSCAL documents
+        entry: bash -c 'for f in $(git diff --cached --name-only | grep -E "component-definition\.yaml|\.json$" | grep -E "compliance/|apps/"); do echo "Validating $f"; done'
+        language: system
+        types: [file]
+        pass_filenames: false
