@@ -31,6 +31,7 @@ repo-root/
 │   ├── security-scan.yaml             # SAST (Semgrep) + SCA (Grype)
 │   ├── compliance-check.yaml          # OSCAL validation + Kyverno policy test
 │   ├── deploy.yaml                    # CD: auto-deploy dev, manual approve production
+│   ├── destroy.yaml                   # Manual trigger: destroy all Azure infrastructure
 │   └── terraform.yaml                 # IaC: plan on PR, apply on merge
 │
 ├── apps/                              # Application source code
@@ -235,6 +236,12 @@ make build
 
 # Push OSCAL artifacts to eMASS
 make emass-sync
+
+# Preview what terraform destroy would remove
+make infra-plan-destroy
+
+# Destroy ALL Azure infrastructure (dev + bootstrap)
+make infra-destroy
 ```
 
 ### After Every Code Change
@@ -263,6 +270,7 @@ Always run per-file lint + type check + test for the file you changed. Do NOT ru
 - Modifying `deploy/` manifests for production overlay
 - Modifying `infrastructure/terraform/environments/production/`
 - Running `make emass-sync` (writes to external government system)
+- Running `make infra-destroy` or triggering the `destroy.yaml` workflow (destroys all Azure infrastructure)
 - Modifying Flux CD configuration in `deploy/flux-system/`
 - Changing encryption keys, secrets, or Vault configuration
 

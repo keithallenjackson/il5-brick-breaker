@@ -1,4 +1,4 @@
-.PHONY: help test-python test-typescript test-functional test-contract test-smoke-local test test-all lint format-python validate-oscal generate-ssp generate-sbom compliance-all compliance-check build emass-sync
+.PHONY: help test-python test-typescript test-functional test-contract test-smoke-local test test-all lint format-python validate-oscal generate-ssp generate-sbom compliance-all compliance-check build emass-sync infra-plan-destroy infra-destroy
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -113,3 +113,22 @@ dev-api: ## Start backend API in development mode
 
 dev-ui: ## Start frontend in development mode
 	cd apps/web-ui && npm run dev
+
+# =============================================================================
+# Infrastructure
+# =============================================================================
+
+infra-plan-destroy: ## Preview what terraform destroy would remove
+	cd infrastructure/terraform/environments/dev && terraform init && terraform plan -destroy
+
+infra-destroy: ## Destroy ALL Azure infrastructure (dev + bootstrap)
+	@echo "WARNING: This will destroy ALL Azure infrastructure."
+	@echo "  - AKS cluster, VNet, NSG (dev environment)"
+	@echo "  - Resource group, storage account, service principal (bootstrap)"
+	@echo "  - Terraform remote state will be lost"
+	@echo ""
+	@echo "You must re-run bootstrap to use terraform again."
+	@echo "Press Ctrl+C to cancel or Enter to continue..."
+	@read _confirm
+	cd infrastructure/terraform/environments/dev && terraform init && terraform destroy -auto-approve
+	cd infrastructure/terraform/bootstrap && terraform init && terraform destroy -auto-approve
