@@ -68,6 +68,9 @@ jobs:
       - name: Wait for infrastructure
         run: flux reconcile kustomization brick-breaker-infrastructure --timeout=10m
 
+      - name: Wait for post-install (ClusterIssuers)
+        run: flux reconcile kustomization brick-breaker-post-install --timeout=5m
+
       - name: Wait for dev environment
         run: flux reconcile kustomization brick-breaker-dev --timeout=10m
 
