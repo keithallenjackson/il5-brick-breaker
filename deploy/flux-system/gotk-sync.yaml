@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1m
-  url: https://github.com/keithallenjackson/agentic-ai-brick-breaker
+  url: https://github.com/keithallenjackson/il5-brick-breaker
   ref:
     branch: main
   secretRef:

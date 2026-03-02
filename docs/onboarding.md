@@ -12,8 +12,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/keithallenjackson/agentic-ai-brick-breaker.git
-cd agentic-ai-brick-breaker
+git clone https://github.com/keithallenjackson/il5-brick-breaker.git
+cd il5-brick-breaker
 
 # Run the setup script
 ./scripts/dev/setup-local.sh

@@ -40,10 +40,8 @@ repo-root/
 │   │   ├── alembic/                   # Database migrations
 │   │   ├── Dockerfile                 # Multi-stage: Chainguard python:latest-dev → python:latest
 │   │   └── component-definition.yaml  # OSCAL component def for this app
-│   ├── mcp-gateway/                   # MCP server broker/proxy (TypeScript) — stub
-│   │   └── component-definition.yaml
-│   ├── compliance-engine/             # RMF artifact generator (Python) — stub
-│   │   └── component-definition.yaml
+│   ├── mcp-gateway/                   # MCP server broker/proxy (TypeScript) — stub (empty)
+│   ├── compliance-engine/             # RMF artifact generator (Python) — stub (empty)
 │   └── web-ui/                        # Brick breaker game (React 19 + pixi.js v8)
 │       ├── src/
 │       ├── tests/
@@ -84,6 +82,11 @@ repo-root/
 │   └── flux-system/                   # Flux CD GitOps operator config
 │       └── gotk-sync.yaml             # GitRepository + Kustomizations (infra, dev, prod)
 │
+├── pipeline/                          # Tekton pipeline definitions (placeholder)
+│   └── tekton/
+│       ├── pipelines/
+│       └── tasks/
+│
 ├── policies/                          # Policy-as-Code
 │   ├── opa/                           # Open Policy Agent / Gatekeeper policies
 │   │   ├── admission/                 # K8s admission control
@@ -93,22 +96,19 @@ repo-root/
 │   │   ├── require-labels.yaml
 │   │   ├── restrict-registries.yaml   # Approved registries: ghcr.io, cgr.dev, docker.io
 │   │   ├── require-non-root.yaml
-│   │   └── require-resource-limits.yaml
+│   │   ├── require-resource-limits.yaml
+│   │   ├── require-probes.yaml
+│   │   └── disallow-privileged.yaml
 │   └── sentinel/                      # Terraform Sentinel policies
 │       └── enforce-encryption.sentinel
 │
 ├── compliance/                        # Compliance-as-Code (OSCAL)
-│   ├── catalogs/                      # OSCAL catalogs (NIST 800-53 Rev5)
-│   │   └── nist-800-53-rev5.json
+│   ├── catalogs/                      # OSCAL catalogs — placeholder (empty)
 │   ├── profiles/                      # OSCAL profiles (baselines)
-│   │   ├── fedramp-high.json
 │   │   ├── dod-il5.json              # IL5 = FedRAMP High + FedRAMP+ + NSS overlays
 │   │   └── project-sentinel.json      # Project-specific profile
-│   ├── component-definitions/         # Aggregated from apps/*/component-definition.yaml
-│   │   └── system-component-def.json
-│   ├── system-security-plan/          # Auto-generated SSP
-│   │   ├── ssp.json                   # OSCAL JSON (machine-readable)
-│   │   └── ssp.md                     # Markdown for human review
+│   ├── component-definitions/         # Aggregated from apps/*/component-definition.yaml — placeholder (empty)
+│   ├── system-security-plan/          # Auto-generated SSP — placeholder (empty)
 │   ├── assessment-plans/
 │   ├── assessment-results/            # CI/CD pipeline scan results mapped to controls
 │   ├── poam/                          # Plan of Action & Milestones
@@ -138,6 +138,7 @@ repo-root/
 │   │   └── diagrams/
 │   ├── runbooks/
 │   │   ├── azure-deployment.md        # Bootstrap-to-production deployment guide
+│   │   ├── database-backup.md         # Database backup procedures
 │   │   ├── deploy.md                  # Standard deployment flow
 │   │   └── rollback.md
 │   ├── onboarding.md
@@ -192,16 +193,16 @@ ruff check apps/agent-runtime/src/path/to/file.py --fix
 ruff format apps/agent-runtime/src/path/to/file.py
 
 # TypeScript type check single file
-npx tsc --noEmit apps/mcp-gateway/src/path/to/file.ts
+npx tsc --noEmit apps/web-ui/src/path/to/file.ts
 
 # TypeScript lint single file
-npx eslint apps/mcp-gateway/src/path/to/file.ts --fix
+npx eslint apps/web-ui/src/path/to/file.ts --fix
 
 # Run a single Python test
 pytest apps/agent-runtime/tests/test_specific.py -x -v
 
 # Run a single TS test
-npx vitest run apps/mcp-gateway/tests/specific.test.ts
+npx vitest run apps/web-ui/tests/specific.test.ts
 
 # Validate a single OSCAL document
 trestle validate -f compliance/profiles/dod-il5.json
