@@ -3,3 +3,9 @@ kind: Kustomization
 
 resources:
   - ../cluster-issuers.yaml
+  - ../../../policies/kyverno/require-labels.yaml
+  - ../../../policies/kyverno/restrict-registries.yaml
+  - ../../../policies/kyverno/require-non-root.yaml
+  - ../../../policies/kyverno/require-probes.yaml
+  - ../../../policies/kyverno/require-resource-limits.yaml
+  - ../../../policies/kyverno/disallow-privileged.yaml

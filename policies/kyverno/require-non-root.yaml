@@ -21,6 +21,12 @@ spec:
           - resources:
               kinds:
                 - Pod
+      exclude:
+        any:
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: database
       validate:
         message: >-
           Containers must run as non-root. Set
