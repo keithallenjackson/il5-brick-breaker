@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: brick-breaker
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/name: brick-breaker-ingress
     app.kubernetes.io/part-of: project-sentinel
@@ -11,14 +10,15 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - brick-breaker.example.mil
-      secretName: brick-breaker-tls
+        - brickbreak.keithjackson.dev
+      secretName: brickbreak-tls
   rules:
-    - host: brick-breaker.example.mil
+    - host: brickbreak.keithjackson.dev
       http:
         paths:
           - path: /api

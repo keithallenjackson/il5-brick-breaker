@@ -78,24 +78,28 @@ component-definition:
             - uuid: c9d0e1f2-a3b4-5678-cdef-789012345678
               control-id: CM-7
               description: >-
-                Least Functionality - The API service is built as a minimal container image
-                using Iron Bank's hardened Python 3.12 base image (registry1.dso.mil/ironbank).
-                The Dockerfile runs the application as non-root user (UID 1001), disables Python
-                bytecode generation (PYTHONDONTWRITEBYTECODE=1), and only exposes the required
-                port (8000). The application only includes endpoints necessary for game
-                functionality: score submission, leaderboard retrieval, and health checks.
-                CORS is configured to restrict origins to explicitly allowed domains via
-                the CORS_ORIGINS setting (src/config.py).
+                Least Functionality - The API service is built as a minimal multi-stage
+                container image using Chainguard's distroless Python base image
+                (cgr.dev/chainguard/python:latest) with zero known CVEs. Dependencies are
+                installed in the builder stage (python:latest-dev) and only the runtime
+                artifacts are copied to the final image. The container runs as the Chainguard
+                nonroot user (UID 65532), disables Python bytecode generation
+                (PYTHONDONTWRITEBYTECODE=1), and only exposes the required port (8000).
+                The application only includes endpoints necessary for game functionality:
+                score submission, leaderboard retrieval, and health checks. CORS is configured
+                to restrict origins to explicitly allowed domains via the CORS_ORIGINS
+                setting (src/config.py).
 
             - uuid: d0e1f2a3-b4c5-6789-defa-890123456789
               control-id: AC-6
               description: >-
-                Least Privilege - The container runs as a non-root user (UID 1001) as specified
-                in the Dockerfile. File ownership is explicitly set with --chown=1001:1001 for
-                all copied files. The database connection uses parameterized queries via
-                SQLAlchemy ORM (src/db/repository.py) to prevent SQL injection. The application
-                operates with minimal database permissions required for CRUD operations on the
-                scores table.
+                Least Privilege - The container runs as the Chainguard nonroot user (UID 65532)
+                as enforced by the distroless base image. The Kubernetes security context sets
+                allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, and drops ALL
+                capabilities. The database connection uses parameterized queries via SQLAlchemy
+                ORM (src/db/repository.py) to prevent SQL injection. The application operates
+                with minimal database permissions required for CRUD operations on the scores
+                table.
 
             - uuid: e1f2a3b4-c5d6-7890-efab-901234567890
               control-id: SC-6

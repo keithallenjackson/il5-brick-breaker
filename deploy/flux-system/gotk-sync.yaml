@@ -5,12 +5,28 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1m
-  url: https://github.com/your-org/agentic-ai-brick-breaker
+  url: https://github.com/keithallenjackson/il5-brick-breaker
   ref:
     branch: main
   secretRef:
     name: flux-git-credentials
 ---
+# Cluster-wide infrastructure (ingress-nginx, cert-manager, kyverno)
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: brick-breaker-infrastructure
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./deploy/infrastructure
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: brick-breaker
+  timeout: 10m
+---
+# Dev environment
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -23,44 +39,24 @@ spec:
   sourceRef:
     kind: GitRepository
     name: brick-breaker
+  dependsOn:
+    - name: brick-breaker-infrastructure
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment
       name: agent-runtime
-      namespace: brick-breaker
+      namespace: brick-breaker-dev
     - apiVersion: apps/v1
       kind: Deployment
       name: web-ui
-      namespace: brick-breaker
+      namespace: brick-breaker-dev
     - apiVersion: apps/v1
       kind: StatefulSet
       name: postgresql
-      namespace: brick-breaker
+      namespace: brick-breaker-dev
   timeout: 5m
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: brick-breaker-staging
-  namespace: flux-system
-spec:
-  interval: 5m
-  path: ./deploy/overlays/staging
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: brick-breaker
-  healthChecks:
-    - apiVersion: apps/v1
-      kind: Deployment
-      name: agent-runtime
-      namespace: brick-breaker
-    - apiVersion: apps/v1
-      kind: Deployment
-      name: web-ui
-      namespace: brick-breaker
-  timeout: 5m
----
+# Production environment
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -73,17 +69,19 @@ spec:
   sourceRef:
     kind: GitRepository
     name: brick-breaker
+  dependsOn:
+    - name: brick-breaker-infrastructure
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment
       name: agent-runtime
-      namespace: brick-breaker
+      namespace: brick-breaker-prod
     - apiVersion: apps/v1
       kind: Deployment
       name: web-ui
-      namespace: brick-breaker
+      namespace: brick-breaker-prod
     - apiVersion: apps/v1
       kind: StatefulSet
       name: postgresql
-      namespace: brick-breaker
+      namespace: brick-breaker-prod
   timeout: 10m

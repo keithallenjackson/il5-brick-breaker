@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agent-runtime
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/name: agent-runtime
     app.kubernetes.io/part-of: project-sentinel
@@ -75,7 +74,7 @@ spec:
                   name: database-credentials
                   key: url
             - name: CORS_ORIGINS
-              value: '["https://brick-breaker.example.mil"]'
+              value: '["https://brickbreak.keithjackson.dev"]'
             - name: LOG_LEVEL
               value: "INFO"
           resources:

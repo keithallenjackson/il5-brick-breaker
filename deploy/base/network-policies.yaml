@@ -4,7 +4,6 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-all
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/part-of: project-sentinel
     app.kubernetes.io/managed-by: flux
@@ -19,7 +18,6 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-web-ui-ingress
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/part-of: project-sentinel
     app.kubernetes.io/managed-by: flux
@@ -43,7 +41,6 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-agent-runtime
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/part-of: project-sentinel
     app.kubernetes.io/managed-by: flux
@@ -89,7 +86,6 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-web-ui-egress
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/part-of: project-sentinel
     app.kubernetes.io/managed-by: flux
@@ -122,7 +118,6 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-postgresql
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/part-of: project-sentinel
     app.kubernetes.io/managed-by: flux

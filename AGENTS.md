@@ -25,56 +25,67 @@ repo-root/
 ├── .gitattributes                     # LFS, line endings
 ├── .pre-commit-config.yaml            # Pre-commit hooks (secrets, lint, OSCAL validate)
 │
+├── .github/workflows/                 # GitHub Actions CI/CD pipelines
+│   ├── ci.yaml                        # Continuous Integration (lint, test, validate)
+│   ├── build-publish.yaml             # Container build + Trivy scan + Cosign sign + SBOM
+│   ├── security-scan.yaml             # SAST (Semgrep) + SCA (Grype)
+│   ├── compliance-check.yaml          # OSCAL validation + Kyverno policy test
+│   ├── deploy.yaml                    # CD: auto-deploy dev, manual approve production
+│   └── terraform.yaml                 # IaC: plan on PR, apply on merge
+│
 ├── apps/                              # Application source code
-│   ├── agent-runtime/                 # Core agentic AI orchestrator (Python)
+│   ├── agent-runtime/                 # Score API backend (Python 3.12 + FastAPI)
 │   │   ├── src/
 │   │   ├── tests/
-│   │   ├── Dockerfile
+│   │   ├── alembic/                   # Database migrations
+│   │   ├── Dockerfile                 # Multi-stage: Chainguard python:latest-dev → python:latest
 │   │   └── component-definition.yaml  # OSCAL component def for this app
-│   ├── mcp-gateway/                   # MCP server broker/proxy (TypeScript)
-│   │   ├── src/
-│   │   ├── tests/
-│   │   ├── Dockerfile
-│   │   └── component-definition.yaml
-│   ├── compliance-engine/             # RMF artifact generator (Python)
-│   │   ├── src/
-│   │   ├── tests/
-│   │   ├── Dockerfile
-│   │   └── component-definition.yaml
-│   └── web-ui/                        # Mission operator dashboard (React/TS)
+│   ├── mcp-gateway/                   # MCP server broker/proxy (TypeScript) — stub (empty)
+│   ├── compliance-engine/             # RMF artifact generator (Python) — stub (empty)
+│   └── web-ui/                        # Brick breaker game (React 19 + pixi.js v8)
 │       ├── src/
 │       ├── tests/
-│       ├── Dockerfile
+│       ├── Dockerfile                 # Multi-stage: node:22-slim → Chainguard nginx:latest
 │       └── component-definition.yaml
 │
 ├── infrastructure/                    # Infrastructure-as-Code
-│   ├── terraform/                     # Cloud infra (GovCloud)
+│   ├── terraform/
+│   │   ├── bootstrap/                 # One-time Azure setup (local state): RG, storage, SP
+│   │   │   └── main.tf
 │   │   ├── environments/
-│   │   │   ├── dev/
-│   │   │   ├── staging/
-│   │   │   └── production/
+│   │   │   └── dev/                   # Dev AKS cluster configuration
 │   │   ├── modules/
-│   │   └── backend.tf
-│   └── ansible/                       # Configuration management
-│       ├── playbooks/
-│       └── roles/
+│   │   │   ├── vnet/                  # Azure Virtual Network + subnet + NSG
+│   │   │   └── aks/                   # Azure Kubernetes Service cluster
+│   │   └── backend.tf                 # azurerm backend (state in Azure Storage)
+│   └── ansible/                       # Configuration management (placeholder)
 │
-├── deploy/                            # GitOps deployment manifests (Kustomize)
-│   ├── base/                          # Base K8s manifests
+├── deploy/                            # GitOps deployment manifests (Kustomize + Flux)
+│   ├── base/                          # Base K8s manifests (no hardcoded namespace)
 │   │   ├── kustomization.yaml
-│   │   ├── namespace.yaml
-│   │   ├── agent-runtime/
-│   │   ├── mcp-gateway/
-│   │   ├── compliance-engine/
-│   │   └── web-ui/
+│   │   ├── agent-runtime/             # Deployment + Service + init container (db-migrate)
+│   │   ├── web-ui/                    # Deployment + Service
+│   │   ├── database/                  # PostgreSQL StatefulSet + Service
+│   │   ├── ingress.yaml               # Ingress: brickbreak.keithjackson.dev
+│   │   └── network-policies.yaml      # Default-deny + per-service allow rules
+│   ├── infrastructure/                # Cluster-wide infra (managed by Flux)
+│   │   ├── kustomization.yaml
+│   │   ├── namespaces.yaml            # brick-breaker-dev, brick-breaker-prod
+│   │   ├── sources.yaml               # HelmRepository resources
+│   │   ├── ingress-nginx.yaml         # HelmRelease: ingress-nginx
+│   │   ├── cert-manager.yaml          # HelmRelease: cert-manager
+│   │   ├── cluster-issuers.yaml       # Let's Encrypt staging + prod ClusterIssuers
+│   │   └── kyverno.yaml               # HelmRelease: kyverno
 │   ├── overlays/                      # Environment-specific overrides
-│   │   ├── dev/
-│   │   ├── staging/
-│   │   └── production/
+│   │   ├── dev/                       # namespace: brick-breaker-dev
+│   │   └── production/                # namespace: brick-breaker-prod
 │   └── flux-system/                   # Flux CD GitOps operator config
-│       ├── gotk-components.yaml
-│       ├── gotk-sync.yaml
-│       └── kustomization.yaml
+│       └── gotk-sync.yaml             # GitRepository + Kustomizations (infra, dev, prod)
+│
+├── pipeline/                          # Tekton pipeline definitions (placeholder)
+│   └── tekton/
+│       ├── pipelines/
+│       └── tasks/
 │
 ├── policies/                          # Policy-as-Code
 │   ├── opa/                           # Open Policy Agent / Gatekeeper policies
@@ -83,41 +94,26 @@ repo-root/
 │   │   └── data/                      # Policy data bundles
 │   ├── kyverno/                       # Kyverno cluster policies
 │   │   ├── require-labels.yaml
-│   │   ├── restrict-registries.yaml   # Iron Bank only
+│   │   ├── restrict-registries.yaml   # Approved registries: ghcr.io, cgr.dev, docker.io
 │   │   ├── require-non-root.yaml
-│   │   └── require-resource-limits.yaml
+│   │   ├── require-resource-limits.yaml
+│   │   ├── require-probes.yaml
+│   │   └── disallow-privileged.yaml
 │   └── sentinel/                      # Terraform Sentinel policies
 │       └── enforce-encryption.sentinel
 │
 ├── compliance/                        # Compliance-as-Code (OSCAL)
-│   ├── catalogs/                      # OSCAL catalogs (NIST 800-53 Rev5)
-│   │   └── nist-800-53-rev5.json
+│   ├── catalogs/                      # OSCAL catalogs — placeholder (empty)
 │   ├── profiles/                      # OSCAL profiles (baselines)
-│   │   ├── fedramp-high.json
 │   │   ├── dod-il5.json              # IL5 = FedRAMP High + FedRAMP+ + NSS overlays
 │   │   └── project-sentinel.json      # Project-specific profile
-│   ├── component-definitions/         # Aggregated from apps/*/component-definition.yaml
-│   │   └── system-component-def.json
-│   ├── system-security-plan/          # Auto-generated SSP
-│   │   ├── ssp.json                   # OSCAL JSON (machine-readable)
-│   │   └── ssp.md                     # Markdown for human review
+│   ├── component-definitions/         # Aggregated from apps/*/component-definition.yaml — placeholder (empty)
+│   ├── system-security-plan/          # Auto-generated SSP — placeholder (empty)
 │   ├── assessment-plans/
 │   ├── assessment-results/            # CI/CD pipeline scan results mapped to controls
 │   ├── poam/                          # Plan of Action & Milestones
 │   ├── trestle-config.yaml            # Compliance-trestle workspace config
 │   └── c2p-config.yaml               # Compliance-to-Policy mapping config
-│
-├── pipeline/                          # CI/CD pipeline definitions
-│   ├── .github/                       # GitHub Actions (if using GitHub)
-│   │   └── workflows/
-│   │       ├── ci.yaml                # Continuous Integration
-│   │       ├── security-scan.yaml     # SAST/DAST/SCA
-│   │       ├── compliance-check.yaml  # OSCAL validation + STIG check
-│   │       ├── build-publish.yaml     # Container build + sign + push
-│   │       └── emass-sync.yaml        # eMASS API sync
-│   └── tekton/                        # Tekton pipelines (if on Platform One)
-│       ├── pipelines/
-│       └── tasks/
 │
 ├── scripts/                           # Automation scripts
 │   ├── compliance/
@@ -137,8 +133,14 @@ repo-root/
 ├── docs/                              # Project documentation
 │   ├── architecture/
 │   │   ├── adr/                       # Architecture Decision Records
+│   │   ├── environments.md            # Dev + Production environment reference
+│   │   ├── pipelines.md               # CI/CD pipeline reference
 │   │   └── diagrams/
 │   ├── runbooks/
+│   │   ├── azure-deployment.md        # Bootstrap-to-production deployment guide
+│   │   ├── database-backup.md         # Database backup procedures
+│   │   ├── deploy.md                  # Standard deployment flow
+│   │   └── rollback.md
 │   ├── onboarding.md
 │   └── security.md                    # Security considerations for developers
 │
@@ -153,24 +155,26 @@ repo-root/
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Language (backend) | Python 3.12+ | Agent runtime, compliance engine |
-| Language (gateway) | TypeScript 5.x / Node 22 LTS | MCP gateway |
-| Language (frontend) | React 19 + TypeScript | Operator dashboard |
-| Container Runtime | Kubernetes 1.30+ (CNCF certified) | Platform One Big Bang compatible |
-| Container Registry | Iron Bank (registry1.dso.mil) | Hardened base images only |
+| Language (backend) | Python 3.12+ | Agent runtime (FastAPI + SQLAlchemy async) |
+| Language (frontend) | React 19 + TypeScript + pixi.js v8 | Brick breaker game + leaderboard |
+| Container Base Images | Chainguard (`cgr.dev/chainguard/*`) | Zero-CVE distroless runtime images |
+| Container Build Images | `node:22-slim`, Chainguard `python:latest-dev` | Build stages only, not shipped |
+| Container Registry | GHCR (`ghcr.io`) | Application images; base images from cgr.dev |
+| Cloud Provider | Azure (AKS) | Central US, Free tier, Standard_B2s nodes |
+| Container Runtime | Kubernetes 1.30+ (AKS) | Azure CNI + Calico network policy |
 | GitOps Operator | Flux CD v2 | Pull-based reconciliation |
+| Ingress | ingress-nginx (Helm) | Azure Load Balancer, TLS via cert-manager |
+| TLS | cert-manager + Let's Encrypt | HTTP-01 challenge, staging + prod issuers |
 | Policy Engine | Kyverno + OPA/Gatekeeper | Admission control + CI gates |
 | Compliance SDK | compliance-trestle (OSCAL Compass) | CNCF sandbox project |
 | Compliance Bridge | compliance-to-policy (C2P) | OSCAL → Kyverno/OPA policy mapping |
 | OSCAL Version | 1.1.2+ | NIST standard for compliance artifacts |
-| IaC | Terraform 1.9+ | GovCloud infrastructure |
-| Config Management | Ansible | OS-level hardening, STIG application |
-| Secret Management | HashiCorp Vault (or SOPS + age) | FIPS 140-3 validated encryption |
+| IaC | Terraform 1.9+ | Azure AKS + VNet (azurerm backend) |
+| Database | PostgreSQL 16 (in-cluster StatefulSet) | `postgres:16-alpine`, Azure managed-csi storage |
 | SBOM | Syft (CycloneDX format) | Software Bill of Materials |
 | Container Signing | Cosign (Sigstore) | Supply chain integrity |
-| CI/CD | GitHub Actions or Tekton | Pipeline definitions in `pipeline/` |
-| Monitoring | Prometheus + Grafana (Big Bang) | Runtime observability |
-| Logging | Fluentbit → Elasticsearch (Big Bang) | Centralized audit logging |
+| Container Scanning | Trivy (Docker-based) | HIGH/CRITICAL CVE gate on every build |
+| CI/CD | GitHub Actions | 6 workflows in `.github/workflows/` |
 
 ---
 
@@ -189,16 +193,16 @@ ruff check apps/agent-runtime/src/path/to/file.py --fix
 ruff format apps/agent-runtime/src/path/to/file.py
 
 # TypeScript type check single file
-npx tsc --noEmit apps/mcp-gateway/src/path/to/file.ts
+npx tsc --noEmit apps/web-ui/src/path/to/file.ts
 
 # TypeScript lint single file
-npx eslint apps/mcp-gateway/src/path/to/file.ts --fix
+npx eslint apps/web-ui/src/path/to/file.ts --fix
 
 # Run a single Python test
 pytest apps/agent-runtime/tests/test_specific.py -x -v
 
 # Run a single TS test
-npx vitest run apps/mcp-gateway/tests/specific.test.ts
+npx vitest run apps/web-ui/tests/specific.test.ts
 
 # Validate a single OSCAL document
 trestle validate -f compliance/profiles/dod-il5.json
@@ -271,7 +275,7 @@ Always run per-file lint + type check + test for the file you changed. Do NOT ru
 
 - Commit secrets, tokens, passwords, or API keys to any file
 - Hardcode IP addresses, hostnames, or network topology details
-- Add container base images from registries other than Iron Bank
+- Add container base images from unapproved registries (approved: `ghcr.io`, `cgr.dev`, `docker.io`)
 - Disable or weaken any security policy in `policies/`
 - Bypass pre-commit hooks
 - Modify `.pre-commit-config.yaml` to remove security checks
@@ -440,7 +444,7 @@ The `policies/` directory contains enforceable policies that map directly to OSC
 
 | Policy File | NIST 800-53 Control | What It Enforces |
 |------------|-------------------|-----------------|
-| `restrict-registries.yaml` | SA-12, CM-7 | Only Iron Bank images allowed |
+| `restrict-registries.yaml` | SA-12, CM-7 | Only approved registries (ghcr.io, cgr.dev, docker.io) |
 | `require-non-root.yaml` | AC-6, CM-7 | No containers run as root |
 | `require-resource-limits.yaml` | SC-6 | CPU/memory limits mandatory |
 | `require-labels.yaml` | CM-8 | All resources labeled for inventory |
@@ -465,7 +469,7 @@ When writing new policies:
 
 ### eMASS Synchronization
 
-The `scripts/compliance/sync-emass.py` script pushes OSCAL artifacts to eMASS via its REST API. This runs in CI on merge to `main` (see `pipeline/.github/workflows/emass-sync.yaml`).
+The `scripts/compliance/sync-emass.py` script pushes OSCAL artifacts to eMASS via its REST API. This will run in CI on merge to `main` when eMASS integration is configured.
 
 What gets synced:
 
@@ -494,9 +498,12 @@ The `deploy/` directory is the GitOps source of truth. Flux CD watches this dire
 
 ### Kustomize Conventions
 
-- `base/` contains the canonical resource definitions
-- `overlays/` contains environment-specific patches (resource limits, replicas, env vars)
-- Never put hardcoded image tags in `base/` — use Flux image automation or Kustomize image transformers
+- `base/` contains the canonical resource definitions — **no hardcoded namespace** (overlays set it)
+- `infrastructure/` contains cluster-wide resources (ingress-nginx, cert-manager, kyverno) managed as a separate Flux Kustomization
+- `overlays/` contains environment-specific patches (namespace, hostname, replicas, resource limits, CORS origins)
+- `overlays/dev/` sets `namespace: brick-breaker-dev`, hostname `dev.brickbreak.keithjackson.dev`
+- `overlays/production/` sets `namespace: brick-breaker-prod`, hostname `brickbreak.keithjackson.dev`
+- Image tags in `base/` use `:latest` — the CD pipeline (`deploy.yaml`) updates overlay `images:` sections with the commit SHA
 - All resources must include labels: `app.kubernetes.io/name`, `app.kubernetes.io/part-of: project-sentinel`, `app.kubernetes.io/managed-by: flux`
 
 ---
@@ -515,13 +522,14 @@ Every agent must understand these constraints. Violations are not style issues �
 
 ### Container Security
 
-- Base images from **Iron Bank only** (`registry1.dso.mil`)
-- If an Iron Bank image is unavailable, document the hardening steps and get AO approval before proceeding
-- All containers run as **non-root** (UID 1001+)
+- Base images from **Chainguard** (`cgr.dev/chainguard/*`) — zero-CVE distroless images
+- For IL5 deployments, migrate to **Iron Bank** (`registry1.dso.mil`) when CAC-authenticated access is available
+- All containers run as **non-root**: Chainguard uses UID **65532** (`nonroot`), PostgreSQL uses UID **999**
 - All containers have **read-only root filesystem** where possible
 - **No privileged containers**, no `hostNetwork`, no `hostPID`
 - Resource limits (CPU, memory) on every container
 - Security context: `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`
+- Container scanning via **Trivy** on every build — CRITICAL/HIGH CVEs block the pipeline
 
 ### Audit Logging
 
@@ -577,7 +585,7 @@ Every agent must understand these constraints. Violations are not style issues �
 - SAST runs on every PR (Semgrep or equivalent)
 - SCA (dependency vulnerability scan) runs on every PR (Grype)
 - Container scan on every build (Trivy or Grype)
-- DAST runs in staging environment (OWASP ZAP)
+- DAST runs in dev environment (OWASP ZAP)
 
 ### Compliance Tests
 
@@ -601,7 +609,7 @@ Before starting any task:
 
 - [ ] Read the relevant `apps/<service>/component-definition.yaml`
 - [ ] Understand which NIST 800-53 controls are affected by the change
-- [ ] Check `docs/adr/` for relevant architecture decisions
+- [ ] Check `docs/architecture/adr/` for relevant architecture decisions
 
 After completing code changes:
 

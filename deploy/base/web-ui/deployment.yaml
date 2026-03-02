@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web-ui
-  namespace: brick-breaker
   labels:
     app.kubernetes.io/name: web-ui
     app.kubernetes.io/part-of: project-sentinel
