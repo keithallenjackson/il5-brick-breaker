@@ -72,9 +72,14 @@ make typecheck
 | `AGENTS.md` | Authoritative development guide |
 | `apps/agent-runtime/src/main.py` | Backend API entry point |
 | `apps/web-ui/src/game/GameEngine.ts` | Game engine core |
-| `apps/*/component-definition.yaml` | OSCAL compliance artifacts |
+| `apps/*/component-definition.yaml` | OSCAL compliance artifacts (per-app) |
+| `compliance/c2p-config.yaml` | OSCAL control → Kyverno/OPA policy mapping |
+| `compliance/system-security-plan/ssp.md` | Auto-generated System Security Plan |
+| `compliance/poam/poam.json` | Plan of Action & Milestones |
+| `policies/kyverno/` | Kubernetes admission policies (deployed via Flux) |
 | `deploy/base/` | Kubernetes base manifests (no hardcoded namespace) |
 | `deploy/infrastructure/` | Cluster-wide infra (ingress-nginx, cert-manager, kyverno) |
+| `deploy/infrastructure/post-install/` | CRD-dependent resources (ClusterIssuers, Kyverno policies) |
 | `deploy/overlays/dev/` | Dev overlay (namespace: brick-breaker-dev) |
 | `deploy/overlays/production/` | Prod overlay (namespace: brick-breaker-prod) |
 | `infrastructure/terraform/bootstrap/` | One-time Azure setup |

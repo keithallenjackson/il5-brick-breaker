@@ -17,13 +17,24 @@ The application runs in a single AKS cluster with namespace-level isolation.
 
 ## Infrastructure Layer
 
-Cluster-wide infrastructure is managed by the `brick-breaker-infrastructure` Flux Kustomization, which deploys:
+Cluster-wide infrastructure is managed by two Flux Kustomizations:
+
+### `brick-breaker-infrastructure`
+
+Deploys cluster-wide services:
 
 - **ingress-nginx**: Ingress controller with Azure Load Balancer
 - **cert-manager**: TLS certificate management with Let's Encrypt
 - **Kyverno**: Kubernetes admission policy engine
 
-Both environment Kustomizations depend on the infrastructure Kustomization — Flux will not deploy application workloads until infrastructure is healthy.
+### `brick-breaker-post-install`
+
+Deploys resources that depend on CRDs installed by the infrastructure layer:
+
+- **ClusterIssuers**: Let's Encrypt staging and production issuers (requires cert-manager CRDs)
+- **Kyverno ClusterPolicies**: 6 admission policies enforcing container security, resource limits, registry restrictions, labeling, health probes, and non-root execution (requires Kyverno CRDs). See `policies/kyverno/` for policy definitions.
+
+Both environment Kustomizations depend on `brick-breaker-post-install`, which in turn depends on `brick-breaker-infrastructure`. Flux will not deploy application workloads until all infrastructure and policies are healthy.
 
 ## Namespace Isolation
 
