@@ -82,11 +82,6 @@ repo-root/
 │   └── flux-system/                   # Flux CD GitOps operator config
 │       └── gotk-sync.yaml             # GitRepository + Kustomizations (infra, dev, prod)
 │
-├── pipeline/                          # Tekton pipeline definitions (placeholder)
-│   └── tekton/
-│       ├── pipelines/
-│       └── tasks/
-│
 ├── policies/                          # Policy-as-Code
 │   ├── opa/                           # Open Policy Agent / Gatekeeper policies
 │   │   ├── admission/                 # K8s admission control
