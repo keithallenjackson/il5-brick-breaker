@@ -39,7 +39,7 @@ jobs:
             ${{ env.REGISTRY }}/agent-runtime:latest
 
       - name: Scan with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: ${{ env.REGISTRY }}/agent-runtime:${{ github.sha }}
           format: sarif
@@ -86,7 +86,7 @@ jobs:
             ${{ env.REGISTRY }}/web-ui:latest
 
       - name: Scan with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: ${{ env.REGISTRY }}/web-ui:${{ github.sha }}
           format: sarif
