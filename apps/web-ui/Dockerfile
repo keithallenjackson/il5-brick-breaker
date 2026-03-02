@@ -12,8 +12,8 @@ COPY index.html ./
 
 RUN npm run build
 
-# Stage 2: Serve
-FROM nginx:1.27-alpine AS production
+# Stage 2: Serve — Chainguard nginx (zero CVEs, non-root by default)
+FROM cgr.dev/chainguard/nginx:latest AS production
 
 # Copy custom nginx config and security headers
 COPY nginx.conf /etc/nginx/conf.d/default.conf
@@ -22,9 +22,6 @@ COPY security-headers.conf /etc/nginx/security-headers.conf
 # Copy built assets
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Run as non-root
-USER 1001
-
 EXPOSE 8080
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx", "-c", "/etc/nginx/nginx.conf", "-e", "/dev/stderr", "-g", "daemon off;"]

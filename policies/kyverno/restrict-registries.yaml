@@ -8,7 +8,7 @@ metadata:
     policies.kyverno.io/category: Supply Chain Security
     policies.kyverno.io/description: >-
       Only allows container images from approved registries
-      (ghcr.io, docker.io). For IL5 deployments, restrict to
+      (ghcr.io, cgr.dev, docker.io). For IL5 deployments, restrict to
       Iron Bank (registry1.dso.mil) only.
     nist-800-53: SA-12, CM-7
 spec:
@@ -24,11 +24,11 @@ spec:
       validate:
         message: >-
           Container images must come from an approved registry
-          (ghcr.io/* or docker.io/*). Image '{{request.object.spec.containers[].image}}'
+          (ghcr.io/*, cgr.dev/*, or docker.io/*). Image '{{request.object.spec.containers[].image}}'
           is not from an approved registry.
         pattern:
           spec:
             containers:
-              - image: "ghcr.io/* | docker.io/* | postgres:* | nginx:* | python:* | node:*"
+              - image: "ghcr.io/* | cgr.dev/* | docker.io/* | postgres:* | nginx:* | python:* | node:*"
             =(initContainers):
-              - image: "ghcr.io/* | docker.io/* | postgres:* | nginx:* | python:* | node:*"
+              - image: "ghcr.io/* | cgr.dev/* | docker.io/* | postgres:* | nginx:* | python:* | node:*"
