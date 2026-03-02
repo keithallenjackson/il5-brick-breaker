@@ -10,7 +10,7 @@ permissions:
 env:
   CLUSTER_NAME: brick-breaker-dev
   RESOURCE_GROUP: rg-brick-breaker-centralus
-  FLUX_VERSION: 2.7.5
+  FLUX_VERSION: v2.7.5
 
 jobs:
   bootstrap:
