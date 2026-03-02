@@ -93,3 +93,47 @@ component-definition:
               props:
                 - name: "implementation-status"
                   value: "implemented"
+            - uuid: "57b86817-f758-4907-950f-67f92036af6e"
+              control-id: "sc-7"
+              description: >
+                Boundary Protection - Default-deny Kubernetes NetworkPolicies
+                in deploy/base/network-policies.yaml enforce network boundaries.
+                The web-ui accepts ingress only from the ingress-nginx namespace
+                on port 8080. Egress is limited to agent-runtime on port 8000
+                and DNS on port 53. All other traffic is denied.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "f118bc1d-ab1f-443f-80e9-9b27e8708bc6"
+              control-id: "ac-4"
+              description: >
+                Information Flow Enforcement - Network policies restrict the
+                web-ui to only communicate with the agent-runtime service. No
+                direct database access is permitted from the web-ui. Data flows
+                are: user → ingress → web-ui → agent-runtime → PostgreSQL.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "1992744e-75c9-45b6-baa3-64ab2a0cbfd4"
+              control-id: "sa-11"
+              description: >
+                Developer Testing and Evaluation - The web-ui has a vitest test
+                suite in tests/ covering UI components, API client, and game
+                logic mocks. The CI pipeline (.github/workflows/ci.yaml) runs
+                tests on every PR and merge to main. Tests must pass before
+                merge is allowed.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
+            - uuid: "d78e40f9-5932-4085-8508-8b13028b4b94"
+              control-id: "si-11"
+              description: >
+                Error Handling - React error boundaries catch rendering
+                failures and display user-friendly fallback UI. The ApiError
+                class in src/api/client.ts handles failed API responses
+                without exposing internal server details to the user. Network
+                errors and timeouts are caught and presented as generic
+                user-facing messages.
+              props:
+                - name: "implementation-status"
+                  value: "implemented"
