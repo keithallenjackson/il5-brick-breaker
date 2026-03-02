@@ -45,7 +45,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         working-directory: ${{ env.TF_DIR }}
-        run: terraform plan -var="environment=dev" -out=tfplan -no-color
+        run: terraform plan -out=tfplan -no-color
         continue-on-error: true
 
       - name: Post plan to PR
@@ -84,4 +84,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_DIR }}
-        run: terraform apply -var="environment=dev" -auto-approve
+        run: terraform apply -auto-approve

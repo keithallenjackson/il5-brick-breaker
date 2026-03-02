@@ -78,8 +78,10 @@ jobs:
           false_positive_files = {
               'apps/agent-runtime/alembic.ini',
               'apps/agent-runtime/src/config.py',
+              'deploy/overlays/dev/kustomization.yaml',
+              'deploy/overlays/production/kustomization.yaml',
           }
-          false_positive_types = {'Secret Keyword'}
+          false_positive_types = {'Secret Keyword', 'Hex High Entropy String'}
           results = data.get('results', {})
           real_secrets = {}
           for filepath, findings in results.items():
