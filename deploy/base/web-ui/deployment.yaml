@@ -24,9 +24,9 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1001
-        runAsGroup: 1001
-        fsGroup: 1001
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -68,15 +68,15 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-            - name: nginx-cache
-              mountPath: /var/cache/nginx
+            - name: nginx-tmp
+              mountPath: /var/lib/nginx/tmp
             - name: nginx-run
-              mountPath: /var/run
+              mountPath: /run
       volumes:
         - name: tmp
           emptyDir:
             sizeLimit: 10Mi
-        - name: nginx-cache
+        - name: nginx-tmp
           emptyDir:
             sizeLimit: 50Mi
         - name: nginx-run
