@@ -1,6 +1,6 @@
 # AGENTS.md — Agentic-AI-Brick-Breaker
 
-> Agentic AI Platform for DoD IL5 Environments with Automated RMF/eMASS Compliance
+> Open-source example project demonstrating IL5 (CUI/NSS) compliance patterns with automated RMF/eMASS compliance
 
 This file is the authoritative guide for any AI coding agent working in this repository. Read it fully before writing code. It applies to Claude Code, Cursor, Copilot, Cline, Windsurf, and any other agentic coding tool.
 
@@ -8,11 +8,13 @@ This file is the authoritative guide for any AI coding agent working in this rep
 
 ## Project Identity
 
-**Agentic-AI-Brick-Breaker** is a containerized, Kubernetes-native agentic AI platform designed for deployment into DoD Impact Level 5 (CUI/NSS) environments. The platform hosts mission-specific AI agents that connect to enterprise tools via Model Context Protocol (MCP), with compliance artifacts generated automatically from the codebase and infrastructure definitions.
+**Agentic-AI-Brick-Breaker** is an open-source example project demonstrating a containerized, Kubernetes-native application built to follow DoD Impact Level 5 (CUI/NSS) security requirements. The platform showcases compliance-as-code patterns where compliance artifacts are generated automatically from the codebase and infrastructure definitions.
 
-The system must achieve and maintain a Continuous Authority to Operate (cATO) posture. Every line of code, every infrastructure definition, and every configuration change is a compliance artifact.
+**This is a personal, publicly available project released under the MIT License. It is not owned by, affiliated with, or endorsed by the U.S. Government or Department of Defense.** It contains no actual CUI or classified material. The project demonstrates how an application *can* follow IL5 requirements as a reference implementation.
 
-**Classification Reminder:** This repository contains NO classified material. All code is UNCLASSIFIED // CUI. Never commit classified data, FOUO markings with actual sensitive content, real vulnerability scan results, PII, or operational network details.
+The system demonstrates a Continuous Authority to Operate (cATO) posture. Every line of code, every infrastructure definition, and every configuration change is a compliance artifact.
+
+**Repository Notice:** Never commit real vulnerability scan results, PII, or operational network details.
 
 ---
 

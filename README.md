@@ -1,12 +1,14 @@
-# UNCLASSIFIED // CUI
-
 # Agentic-AI-Brick-Breaker
 
-> Kubernetes-native HTML5 Brick Breaker game with server-side leaderboard, deployed for DoD IL5 environments with automated RMF/eMASS compliance.
+> An open-source example project demonstrating how to build and deploy a Kubernetes-native application that follows DoD IL5 (CUI/NSS) security requirements with automated RMF/eMASS compliance.
+
+## Disclaimer
+
+**This is a personal, publicly available example project.** It is not owned by, affiliated with, or endorsed by the U.S. Government or Department of Defense. This repository demonstrates how an application *can* follow IL5 CUI/NSS requirements — it does not contain any actual CUI, classified material, or government data. The project is released under the [MIT License](LICENSE).
 
 ## Overview
 
-A fully featured brick breaker game built with modern web technologies, deployed on Kubernetes with full DoD IL5 compliance posture. Features hardware-accelerated WebGL rendering, particle effects, synthesized sound, power-ups, and progressive difficulty levels.
+A fully featured brick breaker game built with modern web technologies, deployed on Kubernetes following DoD IL5 compliance patterns. Features hardware-accelerated WebGL rendering, particle effects, synthesized sound, power-ups, and progressive difficulty levels. The game serves as a reference implementation showing how compliance-as-code, container security, and GitOps practices can be applied to meet IL5 requirements.
 
 ## Architecture
 
@@ -85,9 +87,11 @@ This project maintains a Continuous Authority to Operate (cATO) posture targetin
 
 See [AGENTS.md](AGENTS.md) for full compliance-as-code documentation.
 
-## Classification
+## License
 
-**UNCLASSIFIED // CUI** — This repository contains no classified material.
+This project is licensed under the [MIT License](LICENSE). See the LICENSE file for details.
+
+This is a personal example project and is not affiliated with or endorsed by the U.S. Government or Department of Defense.
 
 ---
 

@@ -1,8 +1,8 @@
 # System Security Plan
 
 **Generated:** 2026-03-02T07:46:04.745267+00:00
-**Classification:** UNCLASSIFIED // CUI
-**System:** Brick Breaker — Agentic AI Platform for DoD IL5 Environments
+**Project Status:** Open-source example project (MIT License) — not government owned, no actual CUI
+**System:** Brick Breaker — Example application demonstrating DoD IL5 compliance patterns
 **OSCAL Version:** 1.1.2
 
 ## System Components
