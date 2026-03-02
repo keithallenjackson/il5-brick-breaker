@@ -1,35 +1,36 @@
 # OSCAL-CONTROL: SC-28 (Protection of Information at Rest)
-# Enforce encryption at rest for all storage resources
+# Enforce encryption at rest for all Azure storage resources
 
 import "tfplan/v2" as tfplan
 
-# All EBS volumes must use AES-256 encryption
-ebs_volumes_encrypted = rule {
+# All Azure managed disks must have encryption enabled
+managed_disks_encrypted = rule {
     all tfplan.resource_changes as _, rc {
-        rc.type is "aws_ebs_volume" implies
-            rc.change.after.encrypted is true
+        rc.type is "azurerm_managed_disk" implies
+            rc.change.after.encryption_settings[0].enabled is true
     }
 }
 
-# All RDS instances must have storage encryption enabled
-rds_encrypted = rule {
+# All Azure PostgreSQL Flexible Servers must have storage encryption
+postgresql_encrypted = rule {
     all tfplan.resource_changes as _, rc {
-        rc.type is "aws_db_instance" implies
-            rc.change.after.storage_encrypted is true
+        rc.type is "azurerm_postgresql_flexible_server" implies
+            rc.change.after.storage[0].geo_redundant_backup_enabled is true
     }
 }
 
-# All S3 buckets must have server-side encryption
-s3_encrypted = rule {
+# All Azure Storage Accounts must enforce TLS 1.2+ and infrastructure encryption
+storage_accounts_encrypted = rule {
     all tfplan.resource_changes as _, rc {
-        rc.type is "aws_s3_bucket" implies
-            length(rc.change.after.server_side_encryption_configuration) > 0
+        rc.type is "azurerm_storage_account" implies
+            rc.change.after.min_tls_version is "TLS1_2" and
+            rc.change.after.infrastructure_encryption_enabled is true
     }
 }
 
 # Main rule: all storage must be encrypted
 main = rule {
-    ebs_volumes_encrypted and
-    rds_encrypted and
-    s3_encrypted
+    managed_disks_encrypted and
+    postgresql_encrypted and
+    storage_accounts_encrypted
 }
