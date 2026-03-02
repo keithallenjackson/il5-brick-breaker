@@ -1,3 +1,4 @@
+# Dev environment — AKS cluster in Central US
 data "azurerm_resource_group" "main" {
   name = "rg-brick-breaker-centralus"
 }
