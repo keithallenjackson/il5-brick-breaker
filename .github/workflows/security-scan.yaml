@@ -80,6 +80,7 @@ jobs:
               'apps/agent-runtime/src/config.py',
               'deploy/overlays/dev/kustomization.yaml',
               'deploy/overlays/production/kustomization.yaml',
+              'docker-compose.yaml',
           }
           false_positive_types = {'Secret Keyword', 'Hex High Entropy String'}
           results = data.get('results', {})

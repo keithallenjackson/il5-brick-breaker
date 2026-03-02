@@ -1,0 +1,41 @@
+# Local development stack for integration testing and manual verification.
+#
+# Usage:
+#   docker compose up -d
+#   make test-smoke-local
+#   docker compose down
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: brickbreaker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d brickbreaker"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  agent-runtime:
+    build:
+      context: apps/agent-runtime
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/brickbreaker"
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:8080"]'
+      LOG_LEVEL: DEBUG
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web-ui:
+    build:
+      context: apps/web-ui
+    ports:
+      - "8080:8080"
+    depends_on:
+      - agent-runtime

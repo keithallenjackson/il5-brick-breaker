@@ -1,4 +1,4 @@
-.PHONY: help test-python test-typescript test-functional test lint format-python validate-oscal generate-ssp generate-sbom compliance-all compliance-check build emass-sync
+.PHONY: help test-python test-typescript test-functional test-smoke-local test test-all lint format-python validate-oscal generate-ssp generate-sbom compliance-all compliance-check build emass-sync
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -16,7 +16,12 @@ test-typescript: ## Run TypeScript unit tests
 test-functional: ## Run functional tests (full service, stubbed deps)
 	cd apps/agent-runtime && python -m pytest ../../tests/integration/ -v --tb=short -o asyncio_mode=auto
 
-test: test-python test-typescript test-functional ## Run all tests
+test-smoke-local: ## Run smoke tests against local stack (requires docker compose up)
+	./tests/smoke/smoke-test.sh http://localhost:8000
+
+test: test-python test-typescript test-functional ## Run all gating tests
+
+test-all: test test-smoke-local ## Run all tests including smoke (requires local stack)
 
 # =============================================================================
 # Linting & Type Checking
