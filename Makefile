@@ -1,4 +1,4 @@
-.PHONY: help test-python test-typescript lint validate-oscal generate-ssp generate-sbom compliance-all compliance-check build emass-sync
+.PHONY: help test-python test-typescript test-functional test lint format-python validate-oscal generate-ssp generate-sbom compliance-all compliance-check build emass-sync
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -7,21 +7,27 @@ help: ## Show this help
 # Testing
 # =============================================================================
 
-test-python: ## Run full Python test suite
+test-python: ## Run Python unit tests
 	cd apps/agent-runtime && python -m pytest tests/ -v --cov=src --cov-report=term-missing --cov-fail-under=80
 
-test-typescript: ## Run full TypeScript test suite
+test-typescript: ## Run TypeScript unit tests
 	cd apps/web-ui && npx vitest run --coverage
 
-test: test-python test-typescript ## Run all tests
+test-functional: ## Run functional tests (full service, stubbed deps)
+	cd apps/agent-runtime && python -m pytest ../../tests/integration/ -v --tb=short -o asyncio_mode=auto
+
+test: test-python test-typescript test-functional ## Run all tests
 
 # =============================================================================
 # Linting & Type Checking
 # =============================================================================
 
 lint-python: ## Lint all Python code
-	ruff check apps/agent-runtime/src/ apps/agent-runtime/tests/ --fix
-	ruff format apps/agent-runtime/src/ apps/agent-runtime/tests/ --check
+	ruff check apps/agent-runtime/src/ apps/agent-runtime/tests/ tests/integration/ --fix
+	ruff format apps/agent-runtime/src/ apps/agent-runtime/tests/ tests/integration/ --check
+
+format-python: ## Format all Python code
+	ruff format apps/agent-runtime/src/ apps/agent-runtime/tests/ tests/integration/
 
 lint-typescript: ## Lint all TypeScript code
 	cd apps/web-ui && npx eslint src/
