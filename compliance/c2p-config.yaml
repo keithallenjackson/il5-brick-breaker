@@ -34,6 +34,11 @@ c2p:
       policy-file: policies/kyverno/require-probes.yaml
       description: "Security function verification via health probes"
 
+    - control-id: ac-6
+      policy-type: kyverno
+      policy-file: policies/kyverno/disallow-privileged.yaml
+      description: "Least privilege via privileged container and host namespace prohibition"
+
     # OPA pipeline policy mappings
     - control-id: si-7
       policy-type: opa
