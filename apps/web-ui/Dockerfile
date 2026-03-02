@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM registry1.dso.mil/ironbank/opensource/nodejs/nodejs22:22 AS builder
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY index.html ./
 RUN npm run build
 
 # Stage 2: Serve
-FROM registry1.dso.mil/ironbank/opensource/nginx/nginx:1.27 AS production
+FROM nginx:1.27-alpine AS production
 
 # Copy custom nginx config and security headers
 COPY nginx.conf /etc/nginx/conf.d/default.conf
