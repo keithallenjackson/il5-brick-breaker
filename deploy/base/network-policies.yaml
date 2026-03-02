@@ -113,6 +113,30 @@ spec:
         - port: 53
           protocol: TCP
 ---
+# Allow cert-manager ACME HTTP-01 solver pods to receive challenges from ingress.
+# Uses podSelector: {} because kustomize commonLabels would inject labels that
+# cert-manager solver pods do not carry. Only ACME solvers bind port 8089.
+# OSCAL-CONTROL: SC-7, SC-8
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-acme-solver
+  labels:
+    app.kubernetes.io/part-of: project-sentinel
+    app.kubernetes.io/managed-by: flux
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8089
+          protocol: TCP
+---
 # Allow PostgreSQL to receive connections from agent-runtime only
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
