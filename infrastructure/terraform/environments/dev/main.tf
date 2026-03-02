@@ -42,7 +42,7 @@ module "aks" {
   location            = data.azurerm_resource_group.main.location
   resource_group_name = data.azurerm_resource_group.main.name
   subnet_id           = module.vnet.aks_subnet_id
-  vm_size             = "Standard_B2s"
+  vm_size             = "Standard_B2s_v2"
   node_count_min      = 1
   node_count_max      = 2
   environment         = "dev"
