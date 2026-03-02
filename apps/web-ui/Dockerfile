@@ -24,4 +24,4 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 8080
 
-CMD ["nginx", "-c", "/etc/nginx/nginx.conf", "-e", "/dev/stderr", "-g", "daemon off;"]
+CMD ["-c", "/etc/nginx/nginx.conf", "-e", "/dev/stderr", "-g", "daemon off;"]

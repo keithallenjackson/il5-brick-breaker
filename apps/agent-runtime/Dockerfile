@@ -26,4 +26,4 @@ ENV PATH="/home/nonroot/.local/bin:$PATH"
 
 EXPOSE 8000
 
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
