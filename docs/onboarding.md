@@ -12,7 +12,7 @@
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/keithallenjackson/agentic-ai-brick-breaker.git
 cd agentic-ai-brick-breaker
 
 # Run the setup script
@@ -44,8 +44,8 @@ Game available at http://localhost:5173
 
 ```bash
 # Per-file (fast — run frequently)
-pytest apps/agent-runtime/tests/test_specific.py -x -v
-npx vitest run apps/web-ui/tests/specific.test.ts
+cd apps/agent-runtime && .venv/bin/pytest tests/test_specific.py -x -v
+cd apps/web-ui && npx vitest run tests/specific.test.ts
 
 # Full suite (slow — only when needed)
 make test
@@ -73,7 +73,22 @@ make typecheck
 | `apps/agent-runtime/src/main.py` | Backend API entry point |
 | `apps/web-ui/src/game/GameEngine.ts` | Game engine core |
 | `apps/*/component-definition.yaml` | OSCAL compliance artifacts |
-| `deploy/base/` | Kubernetes base manifests |
+| `deploy/base/` | Kubernetes base manifests (no hardcoded namespace) |
+| `deploy/infrastructure/` | Cluster-wide infra (ingress-nginx, cert-manager, kyverno) |
+| `deploy/overlays/dev/` | Dev overlay (namespace: brick-breaker-dev) |
+| `deploy/overlays/production/` | Prod overlay (namespace: brick-breaker-prod) |
+| `infrastructure/terraform/bootstrap/` | One-time Azure setup |
+| `infrastructure/terraform/modules/aks/` | AKS cluster module |
+| `docs/architecture/environments.md` | Environment reference |
+| `docs/architecture/pipelines.md` | CI/CD pipeline reference |
+| `docs/runbooks/azure-deployment.md` | Full deployment guide |
+
+## Environments
+
+| Environment | URL | Namespace |
+|-------------|-----|-----------|
+| Dev | `https://dev.brickbreak.keithjackson.dev` | `brick-breaker-dev` |
+| Production | `https://brickbreak.keithjackson.dev` | `brick-breaker-prod` |
 
 ## Compliance
 
@@ -83,3 +98,4 @@ Read `AGENTS.md` fully before making changes. Key rules:
 2. Use conventional commits with `OSCAL-CONTROL:` footer when applicable
 3. All commits must be GPG signed
 4. Run per-file lint + type check + test after every change
+5. Container base images must come from approved registries (ghcr.io, cgr.dev, docker.io)

@@ -48,11 +48,12 @@ component-definition:
               control-id: "cm-7"
               description: >
                 Least functionality is enforced through the multi-stage
-                Dockerfile. The production image uses Iron Bank hardened
-                nginx 1.27 base image with only the static built assets
-                and nginx configuration. No build tools, source code, or
-                development dependencies are included in the production
-                container. The container runs as non-root user (UID 1001).
+                Dockerfile. The production image uses Chainguard distroless
+                nginx base image (cgr.dev/chainguard/nginx:latest) with zero
+                known CVEs, containing only the static built assets and nginx
+                configuration. No build tools, source code, or development
+                dependencies are included in the production container. The
+                container runs as the Chainguard nonroot user (UID 65532).
               props:
                 - name: "implementation-status"
                   value: "implemented"
@@ -60,10 +61,11 @@ component-definition:
               control-id: "ac-6"
               description: >
                 Least privilege is enforced at the container level. The
-                Dockerfile specifies USER 1001 to run nginx as a non-root
-                user. The nginx configuration listens on unprivileged port
-                8080. No capabilities beyond those required for serving
-                static files and proxying API requests are granted.
+                Chainguard nginx base image runs as the nonroot user
+                (UID 65532) by default. The nginx configuration listens on
+                unprivileged port 8080. The Kubernetes security context sets
+                allowPrivilegeEscalation: false, readOnlyRootFilesystem: true,
+                and drops ALL capabilities.
               props:
                 - name: "implementation-status"
                   value: "implemented"
