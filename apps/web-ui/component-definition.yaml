@@ -87,7 +87,8 @@ component-definition:
                 Cryptographic protection is provided through TLS termination
                 at the ingress layer and HSTS enforcement via nginx security
                 headers. The Content-Security-Policy header restricts script
-                execution to same-origin sources, mitigating injection attacks.
+                execution to same-origin sources with 'unsafe-eval' permitted
+                for pixi.js v8 WebGL shader compilation (new Function).
                 All API communication uses the cluster's mTLS-secured network.
               props:
                 - name: "implementation-status"
