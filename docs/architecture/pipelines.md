@@ -10,9 +10,10 @@ All pipelines are defined in `.github/workflows/`. The project follows MinimumCD
 
 Runs lint, type checking, unit tests, and OSCAL validation.
 
-- Python: ruff lint/format, mypy, pytest (23 tests, 80% coverage minimum)
-- TypeScript: eslint, vitest (37 tests)
+- Python: ruff lint/format, mypy, pytest (80% coverage minimum)
+- TypeScript: eslint, tsc, vitest
 - OSCAL: validate component-definitions and profiles
+- Kyverno: validate policy syntax
 
 ### 2. Build and Publish (`build-publish.yaml`)
 
@@ -33,15 +34,17 @@ Tags: `:<commit-sha>` and `:latest`
 **Trigger**: Pull request to `main`
 
 - SAST: Semgrep with auto config
-- SCA: Grype dependency vulnerability scan
+- SCA: Grype (Python), npm audit (TypeScript)
+- Secret scanning
 
 ### 4. Compliance Check (`compliance-check.yaml`)
 
 **Trigger**: Pull request to `main`
 
-- OSCAL document validation
-- Kyverno policy testing
-- YAML/JSON compliance file validation
+- Compliance-to-Policy (C2P) mapping validation (verifies `compliance/c2p-config.yaml` policy files exist)
+- OSCAL document validation (validates `apps/*/component-definition.yaml`)
+- SSP generation from component definitions (uploads as artifact)
+- Kyverno policy validation
 
 ### 5. Deploy (`deploy.yaml`)
 

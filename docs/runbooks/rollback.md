@@ -23,14 +23,19 @@ flux reconcile kustomization brick-breaker-<env> -n flux-system --with-source
 ## Verify Rollback
 
 ```bash
-# Check deployment images
-kubectl get deployment -n brick-breaker -o jsonpath='{.items[*].spec.template.spec.containers[*].image}'
+# Check deployment images (dev)
+kubectl get deployment -n brick-breaker-dev -o jsonpath='{.items[*].spec.template.spec.containers[*].image}'
+
+# Check deployment images (production)
+kubectl get deployment -n brick-breaker-prod -o jsonpath='{.items[*].spec.template.spec.containers[*].image}'
 
 # Check pod status
-kubectl get pods -n brick-breaker
+kubectl get pods -n brick-breaker-dev
+kubectl get pods -n brick-breaker-prod
 
 # Check application health
-curl -f https://brick-breaker.example.mil/healthz
+curl -f https://dev.brickbreak.keithjackson.dev/api/healthz
+curl -f https://brickbreak.keithjackson.dev/api/healthz
 ```
 
 ## Database Considerations
@@ -38,5 +43,5 @@ curl -f https://brick-breaker.example.mil/healthz
 If the rollback involves database schema changes, ensure backward compatibility. Alembic migrations should be reversible:
 
 ```bash
-kubectl exec -it deploy/agent-runtime -n brick-breaker -- alembic downgrade -1
+kubectl exec -it deploy/agent-runtime -n brick-breaker-dev -- alembic downgrade -1
 ```

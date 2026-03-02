@@ -71,7 +71,17 @@ make compliance-all     # Full compliance pipeline
 
 ## Compliance
 
-This project maintains a Continuous Authority to Operate (cATO) posture targeting DoD IL5. All compliance artifacts are generated automatically from code and infrastructure definitions using OSCAL (Open Security Controls Assessment Language).
+This project maintains a Continuous Authority to Operate (cATO) posture targeting DoD IL5. Compliance artifacts are generated automatically from code and infrastructure definitions using OSCAL (Open Security Controls Assessment Language).
+
+| Artifact | Location |
+|----------|----------|
+| Component definitions | `apps/*/component-definition.yaml` |
+| System Security Plan | `compliance/system-security-plan/ssp.md` |
+| Plan of Action & Milestones | `compliance/poam/poam.json` |
+| C2P policy mapping | `compliance/c2p-config.yaml` |
+| Kyverno admission policies | `policies/kyverno/` (6 policies deployed via Flux) |
+| OPA pipeline policies | `policies/opa/` |
+| Sentinel IaC policies | `policies/sentinel/` |
 
 See [AGENTS.md](AGENTS.md) for full compliance-as-code documentation.
 

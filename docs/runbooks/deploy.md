@@ -36,6 +36,11 @@ kubectl rollout status deployment/web-ui -n brick-breaker-prod
 # Check pod health
 kubectl get pods -n brick-breaker-dev
 kubectl get pods -n brick-breaker-prod
+
+# Verify Kyverno policies are deployed
+kubectl get clusterpolicy
+# Expected: 6 policies (disallow-privileged, require-labels, require-non-root,
+#           require-probes, require-resource-limits, restrict-registries)
 ```
 
 ## Troubleshooting
@@ -51,6 +56,16 @@ flux reconcile kustomization brick-breaker-production -n flux-system
 kubectl describe pod <pod-name> -n brick-breaker-dev
 kubectl logs <pod-name> -n brick-breaker-dev
 ```
+
+### Kyverno Blocking Pod Creation
+
+If a pod fails to create due to a Kyverno policy violation, check the policy report:
+```bash
+kubectl get policyreport -n brick-breaker-dev
+kubectl describe clusterpolicy <policy-name>
+```
+
+Note: The `require-non-root` policy excludes database pods (`app.kubernetes.io/component: database`) since PostgreSQL runs as UID 999.
 
 ### Database Migration
 Database migrations run automatically via an init container (`db-migrate`) before the agent-runtime starts. The init container runs `alembic upgrade head` using the `DATABASE_URL` from the `database-credentials` secret.
