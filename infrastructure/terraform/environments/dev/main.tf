@@ -1,20 +1,34 @@
-module "vpc" {
-  source = "../../modules/vpc"
-
-  name               = "brick-breaker-dev"
-  cidr               = "10.0.0.0/16"
-  availability_zones = ["us-gov-west-1a", "us-gov-west-1b"]
-  environment        = "dev"
+data "azurerm_resource_group" "main" {
+  name = "rg-brick-breaker-centralus"
 }
 
-module "eks" {
-  source = "../../modules/eks"
+module "vnet" {
+  source = "../../modules/vnet"
+
+  name                = "brick-breaker-dev"
+  location            = data.azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
+  environment         = "dev"
+}
+
+module "aks" {
+  source = "../../modules/aks"
 
   cluster_name        = "brick-breaker-dev"
-  cluster_version     = "1.30"
-  vpc_id              = module.vpc.vpc_id
-  subnet_ids          = module.vpc.private_subnet_ids
-  node_instance_types = ["m5.large"]
-  node_desired_count  = 2
+  location            = data.azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
+  subnet_id           = module.vnet.aks_subnet_id
+  vm_size             = "Standard_B2s"
+  node_count_min      = 1
+  node_count_max      = 2
   environment         = "dev"
+}
+
+output "cluster_name" {
+  value = module.aks.cluster_name
+}
+
+output "kube_config" {
+  value     = module.aks.kube_config
+  sensitive = true
 }

@@ -1,36 +1,33 @@
+# OSCAL-CONTROL: CM-2 (Baseline Configuration)
 terraform {
   required_version = ">= 1.9.0"
 
-  backend "s3" {
-    bucket         = "brick-breaker-tfstate"
-    key            = "terraform.tfstate"
-    region         = "us-gov-west-1"
-    encrypt        = true
-    dynamodb_table = "brick-breaker-tfstate-lock"
+  backend "azurerm" {
+    resource_group_name  = "rg-brick-breaker-centralus"
+    storage_account_name = "stbrickbreakerstate"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
   }
 
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
     }
   }
 }
 
-provider "aws" {
-  region = "us-gov-west-1"
-
-  default_tags {
-    tags = {
-      Project     = "brick-breaker"
-      Environment = var.environment
-      ManagedBy   = "terraform"
-      Compliance  = "IL5"
-    }
-  }
+provider "azurerm" {
+  features {}
 }
 
 variable "environment" {
-  description = "Deployment environment (dev, staging, production)"
+  description = "Deployment environment (dev, production)"
   type        = string
+}
+
+variable "location" {
+  description = "Azure region"
+  type        = string
+  default     = "centralus"
 }
