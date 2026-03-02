@@ -1,8 +1,8 @@
 # Security Considerations
 
-## Classification
+## Project Status
 
-**UNCLASSIFIED // CUI** — This repository contains no classified material. Never commit classified data, real vulnerability scan results, PII, or operational network details.
+This is a personal, publicly available example project released under the MIT License. It is not owned by, affiliated with, or endorsed by the U.S. Government or Department of Defense. It contains no actual CUI or classified material — it demonstrates how an application can follow IL5 requirements. Never commit real vulnerability scan results, PII, or operational network details.
 
 ## For Developers
 
