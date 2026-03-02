@@ -6,5 +6,4 @@ resources:
   - sources.yaml
   - ingress-nginx.yaml
   - cert-manager.yaml
-  - cluster-issuers.yaml
   - kyverno.yaml
