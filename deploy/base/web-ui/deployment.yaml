@@ -31,6 +31,8 @@ spec:
       containers:
         - name: web-ui
           image: ghcr.io/keithallenjackson/il5-brick-breaker/web-ui:latest
+          command: ["nginx"]
+          args: ["-c", "/etc/nginx/nginx.conf", "-e", "/dev/stderr", "-g", "daemon off;"]
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
