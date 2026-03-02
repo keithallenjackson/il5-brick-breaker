@@ -8,8 +8,6 @@ spec:
   url: https://github.com/keithallenjackson/il5-brick-breaker
   ref:
     branch: main
-  secretRef:
-    name: flux-git-credentials
 ---
 # Cluster-wide infrastructure (ingress-nginx, cert-manager, kyverno)
 apiVersion: kustomize.toolkit.fluxcd.io/v1
