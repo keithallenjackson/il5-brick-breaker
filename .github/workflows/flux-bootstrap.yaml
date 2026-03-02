@@ -1,0 +1,82 @@
+# OSCAL-CONTROL: CM-2 (Baseline Configuration), CM-3 (Configuration Change Control)
+name: Flux Bootstrap
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CLUSTER_NAME: brick-breaker-dev
+  RESOURCE_GROUP: rg-brick-breaker-centralus
+
+jobs:
+  bootstrap:
+    name: Bootstrap Flux CD
+    runs-on: ubuntu-latest
+    environment: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+
+      - name: Get AKS credentials
+        run: az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --overwrite-existing
+
+      - name: Install Flux CLI
+        uses: fluxcd/flux2/action@main
+
+      - name: Verify cluster prerequisites
+        run: flux check --pre
+
+      - name: Install Flux controllers
+        run: flux install
+
+      - name: Create application namespaces
+        run: |
+          kubectl create namespace brick-breaker-dev --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace brick-breaker-prod --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create database credentials
+        run: |
+          DB_PASSWORD=$(openssl rand -base64 24)
+          DB_USER="brickbreaker"
+          DB_URL="postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgresql:5432/brickbreaker"
+
+          for NS in brick-breaker-dev brick-breaker-prod; do
+            kubectl create secret generic database-credentials \
+              --namespace="${NS}" \
+              --from-literal=username="${DB_USER}" \
+              --from-literal=password="${DB_PASSWORD}" \
+              --from-literal=url="${DB_URL}" \
+              --dry-run=client -o yaml | kubectl apply -f -
+          done
+
+      - name: Apply Flux sync configuration
+        run: kubectl apply -f deploy/flux-system/gotk-sync.yaml
+
+      - name: Reconcile GitRepository source
+        run: flux reconcile source git brick-breaker --timeout=2m
+
+      - name: Wait for infrastructure
+        run: flux reconcile kustomization brick-breaker-infrastructure --timeout=10m
+
+      - name: Wait for dev environment
+        run: flux reconcile kustomization brick-breaker-dev --timeout=10m
+
+      - name: Verify deployment status
+        run: |
+          echo "=== Flux Kustomizations ==="
+          flux get kustomizations
+
+          echo ""
+          echo "=== Dev Pods ==="
+          kubectl get pods -n brick-breaker-dev
+
+          echo ""
+          echo "=== Production Pods ==="
+          kubectl get pods -n brick-breaker-prod
