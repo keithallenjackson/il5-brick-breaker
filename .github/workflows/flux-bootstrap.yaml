@@ -10,6 +10,7 @@ permissions:
 env:
   CLUSTER_NAME: brick-breaker-dev
   RESOURCE_GROUP: rg-brick-breaker-centralus
+  FLUX_VERSION: 2.7.5
 
 jobs:
   bootstrap:
@@ -29,12 +30,14 @@ jobs:
 
       - name: Install Flux CLI
         uses: fluxcd/flux2/action@main
+        with:
+          version: ${{ env.FLUX_VERSION }}
 
       - name: Verify cluster prerequisites
         run: flux check --pre
 
       - name: Install Flux controllers
-        run: flux install
+        run: flux install --version=${{ env.FLUX_VERSION }}
 
       - name: Create application namespaces
         run: |
