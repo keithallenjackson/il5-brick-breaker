@@ -8,9 +8,9 @@ resources:
 
 images:
   - name: ghcr.io/keithallenjackson/il5-brick-breaker/agent-runtime
-    newTag: 961c329f9986be0410a8c940644626966d10921c
+    newTag: 74a3ff959e41e1fcafbe783af998fa3b1e223972
   - name: ghcr.io/keithallenjackson/il5-brick-breaker/web-ui
-    newTag: 961c329f9986be0410a8c940644626966d10921c
+    newTag: 74a3ff959e41e1fcafbe783af998fa3b1e223972
 
 patches:
   # Scale down to single replica for dev
