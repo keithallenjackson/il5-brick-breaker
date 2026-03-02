@@ -21,9 +21,9 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: Run ruff check
-        run: ruff check apps/agent-runtime/src/ apps/agent-runtime/tests/ tests/integration/
+        run: ruff check apps/agent-runtime/src/ apps/agent-runtime/tests/ tests/integration/ tests/contract/
       - name: Run ruff format check
-        run: ruff format apps/agent-runtime/src/ apps/agent-runtime/tests/ tests/integration/ --check
+        run: ruff format apps/agent-runtime/src/ apps/agent-runtime/tests/ tests/integration/ tests/contract/ --check
 
   typecheck-python:
     name: Type Check Python
