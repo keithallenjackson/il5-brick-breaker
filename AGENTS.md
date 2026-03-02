@@ -28,9 +28,11 @@ repo-root/
 ├── .github/workflows/                 # GitHub Actions CI/CD pipelines
 │   ├── ci.yaml                        # Continuous Integration (lint, test, validate)
 │   ├── build-publish.yaml             # Container build + Trivy scan + Cosign sign + SBOM
-│   ├── security-scan.yaml             # SAST (Semgrep) + SCA (Grype)
-│   ├── compliance-check.yaml          # OSCAL validation + Kyverno policy test
-│   ├── deploy.yaml                    # CD: auto-deploy dev, manual approve production
+│   ├── security-scan.yaml             # SAST (Semgrep) + SCA (Grype) + secret scanning
+│   ├── compliance-check.yaml          # OSCAL validation + C2P mapping + SSP generation
+│   ├── contract-tests.yaml            # Daily scheduled API contract tests (non-gating)
+│   ├── deploy.yaml                    # CD: auto-deploy dev, smoke test, manual approve prod
+│   ├── flux-bootstrap.yaml            # One-time Flux CD cluster bootstrap
 │   └── terraform.yaml                 # IaC: plan on PR, apply on merge
 │
 ├── apps/                              # Application source code
@@ -139,9 +141,12 @@ repo-root/
 │   ├── onboarding.md
 │   └── security.md                    # Security considerations for developers
 │
-└── tests/                             # Integration / E2E tests
-    ├── integration/
-    └── e2e/
+├── docker-compose.yaml                # Local dev stack (postgres + api + ui)
+│
+└── tests/                             # Cross-app test suites
+    ├── integration/                   # Functional tests (gating, SQLite in-memory)
+    ├── contract/                      # API contract tests (daily schedule, non-gating)
+    └── smoke/                         # Post-deployment smoke tests (bash + curl)
 ```
 
 ---
@@ -169,7 +174,8 @@ repo-root/
 | SBOM | Syft (CycloneDX format) | Software Bill of Materials |
 | Container Signing | Cosign (Sigstore) | Supply chain integrity |
 | Container Scanning | Trivy (Docker-based) | HIGH/CRITICAL CVE gate on every build |
-| CI/CD | GitHub Actions | 6 workflows in `.github/workflows/` |
+| CI/CD | GitHub Actions | 8 workflows in `.github/workflows/` |
+| Local Dev Stack | Docker Compose | postgres + agent-runtime + web-ui |
 
 ---
 
@@ -209,11 +215,29 @@ kyverno validate policy policies/kyverno/require-labels.yaml
 ### Project-Wide (Slow — Only When Explicitly Requested or Pre-Commit)
 
 ```bash
-# Full Python test suite
+# Full Python unit tests (80% coverage gate)
 make test-python
 
-# Full TypeScript test suite
+# Full TypeScript unit tests
 make test-typescript
+
+# Functional tests (full service, stubbed deps — gating)
+make test-functional
+
+# Contract tests (API schema compatibility — non-gating, daily schedule)
+make test-contract
+
+# All gating tests (unit + functional)
+make test
+
+# Smoke tests against local docker compose stack
+make test-smoke-local
+
+# All tests including smoke (requires docker compose up)
+make test-all
+
+# Format Python code (auto-fix)
+make format-python
 
 # Full lint pass
 make lint
@@ -288,7 +312,7 @@ This project follows the Minimum Viable Continuous Delivery practices defined at
 1. **Trunk-based development.** The `main` branch is the trunk. All work integrates here.
 2. **Short-lived branches only.** Feature branches must originate from `main`, re-integrate to `main`, and be deleted after merge. Maximum branch lifetime: 24 hours preferred, 48 hours hard limit.
 3. **Work integrates to trunk daily minimum.** If a task takes more than a day, break it into smaller incremental commits that keep `main` green.
-4. **Automated testing before merge.** Every PR must pass CI (lint, type check, unit tests, OSCAL validation, secret scan, SBOM generation) before merge.
+4. **Automated testing before merge.** Every PR must pass the full gating suite (lint, type check, unit tests, functional tests, OSCAL validation, compliance checks, security scans) before merge.
 5. **All work stops when main is red.** If CI on `main` fails, fixing it is the top priority. Do not stack new work on a broken trunk.
 6. **The pipeline is the only path to deploy.** No manual deployments. No `kubectl apply` by hand. Everything goes through GitOps reconciliation via Flux CD.
 7. **The pipeline decides releasability.** Its verdict is definitive. If the pipeline says no, the artifact does not ship.
@@ -566,28 +590,96 @@ Every agent must understand these constraints. Violations are not style issues �
 
 ---
 
-## Testing Requirements
+## Testing Requirements (MinimumCD)
+
+This project follows the [MinimumCD Testing Fundamentals](https://migration.minimumcd.org/docs/migrate-to-cd/migration-path/foundations/testing-fundamentals/). The core principle:
+
+> Everything that blocks deployment must be deterministic and under your control. Everything that involves external systems runs asynchronously or post-deployment.
+
+### Test Architecture
+
+| Layer | Location | Pipeline Stage | Trigger | External Deps | Duration Target |
+|-------|----------|---------------|---------|---------------|-----------------|
+| Unit | `apps/*/tests/` | Gating (pre-merge) | Every PR | None (mocked) | < 2 min |
+| Functional | `tests/integration/` | Gating (pre-merge) | Every PR | None (SQLite in-memory) | < 2 min |
+| Contract | `tests/contract/` | Scheduled (daily 06:00 UTC) | Cron + manual | None (in-process) | < 1 min |
+| Smoke | `tests/smoke/` | Post-deployment | After deploy to dev | Live service + network | < 30 sec |
+| Security (SAST/SCA) | `.github/workflows/security-scan.yaml` | Gating (pre-merge) | Every PR | None | < 5 min |
+| Compliance | `.github/workflows/compliance-check.yaml` | Gating (pre-merge) | Every PR | None | < 2 min |
+
+**Total gating suite: < 10 minutes** (MinimumCD requirement).
 
 ### Unit Tests
 
 - All new code must have unit tests. Minimum 80% line coverage for new files.
-- Tests live alongside source code in `tests/` subdirectory of each app
-- Use `pytest` for Python, `vitest` for TypeScript
-- Mock external services — tests must run without network access
+- Tests live alongside source code in `tests/` subdirectory of each app.
+- Use `pytest` for Python, `vitest` for TypeScript.
+- Mock external services -- tests must run without network access.
+- Run: `make test-python`, `make test-typescript`
+
+### Functional Tests
+
+Functional tests boot the full FastAPI service with all middleware and test complete user journeys. They use SQLite in-memory as a database stub -- zero external dependencies, fully deterministic.
+
+- **Score lifecycle**: Submit score, retrieve in leaderboard, verify ordering and pagination.
+- **Input validation**: XSS, SQL injection, emoji, boundary values -- all rejected with proper 422 errors.
+- **Operational health**: Liveness/readiness probes, security headers on all response codes, concurrent submissions.
+- Run: `make test-functional`
+- CI job: `test-functional` (depends on `test-python` passing first)
+
+### Contract Tests
+
+Contract tests verify that the frontend API client's expectations match the backend's actual OpenAPI schema. They catch schema drift between frontend and backend before it reaches production.
+
+- Validate endpoint existence, request/response schemas, status codes, and query parameters against the OpenAPI spec.
+- Run on a **daily schedule** (06:00 UTC), not per-commit. This is intentional per MinimumCD -- contract tests verify test doubles match reality and run asynchronously.
+- Run: `make test-contract`
+- CI workflow: `contract-tests.yaml` (cron + manual dispatch)
+
+### Smoke Tests
+
+Smoke tests verify the deployed service is alive and functional. They run post-deployment against the real environment using bash + curl.
+
+- **7 checks**: liveness probe, readiness probe, score submission, leaderboard retrieval, XSS rejection, security headers, response time (< 2s).
+- Dev smoke tests **gate production deployment** -- production cannot deploy unless dev smoke tests pass.
+- Run locally: `docker compose up -d && make test-smoke-local`
+- CI job: `smoke-test-dev` in `deploy.yaml` (runs between dev deploy and prod deploy)
 
 ### Security Tests
 
-- SAST runs on every PR (Semgrep or equivalent)
-- SCA (dependency vulnerability scan) runs on every PR (Grype)
-- Container scan on every build (Trivy or Grype)
+- SAST runs on every PR (Semgrep: Python, TypeScript, OWASP Top 10, security audit rulesets)
+- SCA Python (Grype): fails on critical CVEs with available fixes
+- SCA TypeScript (npm audit): fails on critical vulnerabilities
+- Secret scanning (detect-secrets): scans all files, filters known false positives
+- Container scan on every build (Trivy): CRITICAL/HIGH CVEs block the pipeline
 - DAST runs in dev environment (OWASP ZAP)
 
 ### Compliance Tests
 
 - OSCAL document validation on every PR (`trestle validate`)
+- C2P mapping verification: all Kyverno policies must have NIST 800-53 control annotations
+- OPA policy mapping: all OPA policies must have OSCAL-CONTROL comments
+- SSP generation from component definitions (uploaded as CI artifact)
 - STIG compliance check on container images (`openscap-scanner`)
-- Policy validation (`kyverno test`, `opa test`)
 - SBOM generation and CVE cross-reference on every build
+
+### MinimumCD Success Metrics
+
+| Metric | Target | Enforcement |
+|--------|--------|-------------|
+| Gating suite duration | < 10 minutes | CI timeout |
+| Flaky tests in gating suite | 0 | Fix or remove immediately -- never quarantine in the gating path |
+| External dependencies in gating tests | 0 | SQLite in-memory for functional tests, mocks for unit tests |
+| Coverage trend | Non-decreasing | `--cov-fail-under=80` in CI |
+| Contract test freshness | All passing within 24 hours | Daily scheduled workflow |
+| Defect escape rate | Decreasing | Every bug fix must include a regression test |
+
+### Non-Negotiable Practices
+
+1. **Test for every bug fix.** Every bug fix must include a test that reproduces the bug before the fix and passes after the fix. This prevents recurrence and builds coverage where the codebase is weakest.
+2. **Zero flaky tests.** If a test is flaky, fix it or delete it. Never leave flaky tests in the gating suite.
+3. **Tests verify behavior, not implementation.** Refactoring should not break tests. If it does, the test is coupled to implementation details and should be rewritten.
+4. **Only test what you control.** Never test consumed service behavior. Test your response to their instability instead.
 
 ### What to Do When Tests Fail
 
@@ -595,6 +687,7 @@ Every agent must understand these constraints. Violations are not style issues �
 2. If a security scan finds a critical or high CVE: stop feature work, remediate or document in POA&M.
 3. If OSCAL validation fails: the component-definition is out of sync with code. Update it.
 4. If a STIG check fails: check if the control is applicable. If yes, fix. If not, document the tailoring rationale in the component-definition.
+5. If contract tests fail on the daily schedule: investigate schema drift between frontend and backend. Update test doubles to match the current API, then verify the frontend client handles the change correctly.
 
 ---
 
@@ -610,7 +703,7 @@ After completing code changes:
 
 - [ ] Run per-file lint, type check, and tests for every modified file
 - [ ] Update `component-definition.yaml` if the change implements, modifies, or affects any security control
-- [ ] Update or add tests (unit tests for logic, integration tests for API contracts)
+- [ ] Update or add tests (unit tests for logic, functional tests for user journeys, contract tests for API schema changes)
 - [ ] Run `trestle validate` on any modified OSCAL documents
 - [ ] If adding a new dependency: verify it has no critical CVEs, add to SBOM, document in component-definition
 - [ ] Write a conventional commit message with OSCAL-CONTROL footer if applicable
@@ -631,6 +724,7 @@ After completing code changes:
 | IL5 | Impact Level 5 — DoD cloud security tier for NSS/CUI |
 | Iron Bank | DoD repository of hardened container images |
 | MCP | Model Context Protocol — open standard for AI agent-to-tool connectivity |
+| MinimumCD | Minimum Viable Continuous Delivery — required practices for claiming CD |
 | NSS | National Security Systems |
 | OSCAL | Open Security Controls Assessment Language (NIST standard) |
 | Platform One | DoD enterprise DevSecOps platform |
@@ -648,6 +742,7 @@ After completing code changes:
 ## Reference Links
 
 - [MinimumCD](https://minimumcd.org) — Minimum Viable Continuous Delivery practices
+- [MinimumCD Testing Fundamentals](https://migration.minimumcd.org/docs/migrate-to-cd/migration-path/foundations/testing-fundamentals/) — Test architecture for CD
 - [OSCAL](https://pages.nist.gov/OSCAL/) — NIST Open Security Controls Assessment Language
 - [OSCAL Compass](https://oscal-compass.dev/) — CNCF compliance-as-code tooling
 - [Compliance Trestle](https://github.com/oscal-compass/compliance-trestle) — OSCAL CLI/SDK
