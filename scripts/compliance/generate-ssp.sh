@@ -49,7 +49,7 @@ print(f'  Written: $COMP_DEF_DIR/system-component-def.json')
 echo "Generating SSP markdown..."
 python3 -c "
 import json
-import os
+from collections import defaultdict
 from datetime import datetime, timezone
 
 with open('$COMP_DEF_DIR/system-component-def.json') as f:
@@ -57,20 +57,83 @@ with open('$COMP_DEF_DIR/system-component-def.json') as f:
 
 md = []
 md.append('# System Security Plan')
-md.append(f'')
+md.append('')
 md.append(f'**Generated:** {datetime.now(timezone.utc).isoformat()}')
-md.append(f'**Classification:** UNCLASSIFIED // CUI')
-md.append(f'')
+md.append('**Classification:** UNCLASSIFIED // CUI')
+md.append('**System:** Brick Breaker — Agentic AI Platform for DoD IL5 Environments')
+md.append('**OSCAL Version:** 1.1.2')
+md.append('')
+
+# Collect all control implementations across all components
+# Key: control-id, Value: list of (component_title, description, status)
+controls = defaultdict(list)
+
 md.append('## System Components')
 md.append('')
 
-for comp in data.get('system-component-definition', {}).get('components', []):
-    if isinstance(comp, dict):
-        title = comp.get('metadata', {}).get('title', 'Unknown')
-        md.append(f'### {title}')
+for comp_def in data.get('system-component-definition', {}).get('components', []):
+    if not isinstance(comp_def, dict):
+        continue
+    comp_title = comp_def.get('metadata', {}).get('title', 'Unknown')
+    md.append(f'### {comp_title}')
+    md.append('')
+
+    for component in comp_def.get('components', []):
+        if not isinstance(component, dict):
+            continue
+        title = component.get('title', 'Unknown')
+        desc = component.get('description', '')
+        ctype = component.get('type', 'software')
+        md.append(f'**{title}** ({ctype})')
         md.append('')
+        if desc:
+            md.append(f'{desc}')
+            md.append('')
+
+        for ctrl_impl in component.get('control-implementations', []):
+            source = ctrl_impl.get('source', '')
+            for req in ctrl_impl.get('implemented-requirements', []):
+                cid = req.get('control-id', '').upper()
+                rdesc = req.get('description', '')
+                status = 'implemented'
+                for p in req.get('props', []):
+                    if p.get('name') == 'implementation-status':
+                        status = p.get('value', 'implemented')
+                controls[cid].append((title, rdesc, status))
+
+md.append('---')
+md.append('')
+md.append('## Control Implementation Summary')
+md.append('')
+md.append('| Control | Status | Implementing Components |')
+md.append('|---------|--------|------------------------|')
+
+for cid in sorted(controls.keys()):
+    entries = controls[cid]
+    components_list = ', '.join(sorted(set(e[0] for e in entries)))
+    status = entries[0][2]
+    md.append(f'| {cid} | {status} | {components_list} |')
 
 md.append('')
+md.append(f'**Total controls addressed:** {len(controls)}')
+md.append('')
+
+md.append('---')
+md.append('')
+md.append('## Control Implementation Details')
+md.append('')
+
+for cid in sorted(controls.keys()):
+    entries = controls[cid]
+    md.append(f'### {cid}')
+    md.append('')
+    for comp_name, rdesc, status in entries:
+        md.append(f'**Component:** {comp_name}  ')
+        md.append(f'**Status:** {status}')
+        md.append('')
+        md.append(f'{rdesc}')
+        md.append('')
+
 md.append('---')
 md.append('*Auto-generated from OSCAL component definitions.*')
 
