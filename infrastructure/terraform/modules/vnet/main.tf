@@ -43,6 +43,34 @@ resource "azurerm_network_security_group" "aks" {
   location            = var.location
   resource_group_name = var.resource_group_name
 
+  # Allow inbound HTTP for ingress controller and ACME HTTP-01 challenges
+  # OSCAL-CONTROL: SC-7
+  security_rule {
+    name                       = "AllowHTTP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+
+  # Allow inbound HTTPS for ingress controller TLS termination
+  # OSCAL-CONTROL: SC-7, SC-8
+  security_rule {
+    name                       = "AllowHTTPS"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+
   tags = {
     Environment = var.environment
   }
