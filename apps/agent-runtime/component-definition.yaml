@@ -4,8 +4,8 @@ component-definition:
     title: Brick Breaker API Service Component Definition
     version: "0.1.0"
     oscal-version: "1.1.2"
-    last-modified: "2024-01-01T00:00:00Z"
-    published: "2024-01-01T00:00:00Z"
+    last-modified: "2026-03-02T00:00:00Z"
+    published: "2026-02-28T00:00:00Z"
     parties:
       - uuid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
         type: organization
@@ -20,8 +20,8 @@ component-definition:
         with comprehensive audit logging, input validation, and security controls.
       control-implementations:
         - uuid: c3d4e5f6-a7b8-9012-cdef-123456789012
-          source: https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json
-          description: NIST SP 800-53 Rev 5 control implementation for the Brick Breaker API Service
+          source: ../../compliance/profiles/dod-il5.json
+          description: DoD IL5 profile implementation
           implemented-requirements:
             - uuid: d4e5f6a7-b8c9-0123-defa-234567890123
               control-id: AU-2
@@ -122,3 +122,163 @@ component-definition:
                 output (ScoreResponse) with from_attributes mode for ORM model validation.
                 SQLAlchemy mapped columns enforce database-level type constraints (String(50),
                 Integer, DateTime with timezone) in src/db/models.py.
+
+            - uuid: 970ef618-0a62-4579-859d-8cd9383c9aa6
+              control-id: SC-7
+              description: >-
+                Boundary Protection - Default-deny Kubernetes NetworkPolicies in
+                deploy/base/network-policies.yaml enforce network boundaries. The
+                agent-runtime only accepts ingress from the ingress-nginx namespace
+                and web-ui pods on port 8000. Egress is limited to PostgreSQL on
+                port 5432 and DNS on port 53. All other traffic is denied by the
+                default-deny-all NetworkPolicy.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: be5a80f3-7b64-402a-81f7-455349e3512c
+              control-id: AC-4
+              description: >-
+                Information Flow Enforcement - Network policies enforce strict
+                information flow paths: ingress-nginx → web-ui → agent-runtime →
+                PostgreSQL. No lateral movement is allowed between services. The
+                agent-runtime cannot initiate connections to web-ui or any external
+                service. Data flows are unidirectional from the user through the
+                ingress to the API and into the database.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: d8ee980f-e864-4532-9e99-763cf2024498
+              control-id: SA-11
+              description: >-
+                Developer Testing and Evaluation - The agent-runtime has a pytest
+                test suite in tests/ with 80% minimum coverage enforced by CI via
+                --cov-fail-under=80. Tests cover schemas (test_schemas.py), API
+                routes (test_routes.py), middleware (test_middleware.py), and
+                database operations (test_db.py). The CI pipeline
+                (.github/workflows/ci.yaml) runs tests on every PR and merge.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: 33b89f67-df6f-4134-ab8e-1ff39560f59a
+              control-id: SI-11
+              description: >-
+                Error Handling - FastAPI exception handlers and Pydantic validation
+                provide structured error responses. Invalid input returns HTTP 422
+                with detailed validation error messages. Unhandled exceptions return
+                HTTP 500 without leaking stack traces or internal implementation
+                details. Errors are captured in audit logs via AuditMiddleware
+                (src/middleware/audit.py) with outcome set to "error".
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: 67d8b581-c1ac-48c7-95e2-ee3e1da58e85
+              control-id: SC-28
+              description: >-
+                Protection of Information at Rest - Database credentials are stored
+                in Kubernetes Secrets (database-credentials). PostgreSQL data resides
+                on persistent volumes provisioned via the managed-csi storage class.
+                Terraform state is stored in an Azure Storage Account with TLS 1.2
+                minimum and blob versioning enabled.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: d94369b9-b4df-41d3-8809-84611cef3780
+              control-id: CA-7
+              description: >-
+                Continuous Monitoring - The CI/CD pipeline provides continuous
+                security monitoring: SAST via Semgrep, SCA via Grype, container
+                scanning via Trivy, and secret scanning via detect-secrets run on
+                every PR and merge to main. CRITICAL and HIGH findings block the
+                pipeline. Results are uploaded as GitHub Actions artifacts for
+                audit review.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: 39b2f4af-f12e-4c93-aa88-2336fddf9b90
+              control-id: CM-2
+              description: >-
+                Baseline Configuration - Infrastructure baseline is established via
+                Terraform IaC for Azure resources (infrastructure/terraform/),
+                Kustomize manifests for Kubernetes resources (deploy/base/), and
+                Flux CD for automated drift detection and reconciliation. All
+                baseline configurations are version-controlled in Git.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: 78f56572-b98a-4d74-bfee-04bf34e556a9
+              control-id: CM-3
+              description: >-
+                Configuration Change Control - All changes follow Git-based trunk
+                development with required PR reviews and CI validation gates
+                (lint, type check, test, OSCAL validation, security scanning).
+                Flux CD pull-based reconciliation ensures only approved changes
+                reach the cluster. All changes are auditable through Git history.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: d2d84ca0-192b-4806-ad09-f25579c41228
+              control-id: SA-15
+              description: >-
+                Development Process, Standards, and Tools - MinimumCD practices
+                are enforced: trunk-based development, automated testing before
+                merge, immutable container artifacts signed with Cosign, and the
+                CI/CD pipeline as the sole deployment path. Development standards
+                are documented in AGENTS.md.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: e5097147-d074-4553-b9fe-2f85bedc9b3f
+              control-id: CP-10
+              description: >-
+                System Recovery and Reconstitution - Flux CD GitOps reconciliation
+                provides self-healing from Git state. Infrastructure can be
+                reproduced from Terraform definitions. Kubernetes deployments can
+                be rolled back by reverting a Git commit in deploy/overlays/<env>/.
+                Terraform state versioning in Azure Storage enables infrastructure
+                state recovery.
+              props:
+                - name: implementation-status
+                  value: implemented
+
+            - uuid: ca4b11bd-3061-4e5f-b5e1-d2a696cb7b14
+              control-id: IA-2
+              description: >-
+                Identification and Authentication - Not applicable. The brick
+                breaker game uses anonymous score submission by design
+                (docs/architecture/adr/0004-anonymous-score-submission.md). No
+                user authentication is required. The game is publicly accessible.
+              props:
+                - name: implementation-status
+                  value: not-applicable
+
+            - uuid: f5ea4f9e-29ec-49f9-9a75-135bc4c49ae7
+              control-id: IA-5
+              description: >-
+                Authenticator Management - Not applicable. No user authenticators
+                are managed by the application. Service-to-service communication
+                relies on Kubernetes service accounts and network policies for
+                access control within the cluster.
+              props:
+                - name: implementation-status
+                  value: not-applicable
+
+            - uuid: d0974902-9b41-49ce-8b88-f6b200454e1d
+              control-id: SA-5
+              description: >-
+                System Documentation - System documentation is maintained in
+                docs/architecture/ (ADRs, environments.md, pipelines.md),
+                docs/security.md, AGENTS.md (development standards), and OSCAL
+                component-definitions (apps/*/component-definition.yaml). All
+                documentation is version-controlled alongside source code.
+              props:
+                - name: implementation-status
+                  value: implemented
