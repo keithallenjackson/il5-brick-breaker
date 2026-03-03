@@ -23,7 +23,7 @@ spec:
     kind: GitRepository
     name: brick-breaker
   wait: true
-  timeout: 10m
+  timeout: 15m
 ---
 # CRD-dependent resources (ClusterIssuers require cert-manager CRDs)
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -70,7 +70,7 @@ spec:
       kind: StatefulSet
       name: postgresql
       namespace: brick-breaker-dev
-  timeout: 5m
+  timeout: 10m
 ---
 # Production environment
 apiVersion: kustomize.toolkit.fluxcd.io/v1
