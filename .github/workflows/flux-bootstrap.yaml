@@ -71,7 +71,7 @@ jobs:
           kubectl wait kustomization/brick-breaker-infrastructure \
             -n flux-system \
             --for=condition=Ready \
-            --timeout=10m
+            --timeout=20m
 
       - name: Wait for post-install (ClusterIssuers + Kyverno policies)
         run: |
@@ -87,7 +87,7 @@ jobs:
           kubectl wait kustomization/brick-breaker-dev \
             -n flux-system \
             --for=condition=Ready \
-            --timeout=10m
+            --timeout=15m
 
       - name: Verify deployment status
         run: |
@@ -101,3 +101,30 @@ jobs:
           echo ""
           echo "=== Production Pods ==="
           kubectl get pods -n brick-breaker-prod
+
+      - name: Debug on failure
+        if: failure()
+        run: |
+          echo "=== Flux Kustomizations ==="
+          flux get kustomizations -A 2>/dev/null || true
+
+          echo ""
+          echo "=== HelmReleases ==="
+          kubectl get helmreleases -A 2>/dev/null || true
+
+          echo ""
+          echo "=== HelmRelease Details ==="
+          for NS in ingress-nginx cert-manager kyverno; do
+            for HR in $(kubectl get helmreleases -n "$NS" -o name 2>/dev/null); do
+              echo "--- $NS/$HR ---"
+              kubectl describe "$HR" -n "$NS" 2>/dev/null | tail -30
+            done
+          done
+
+          echo ""
+          echo "=== Pods Not Ready ==="
+          kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded 2>/dev/null || true
+
+          echo ""
+          echo "=== Recent Events (warnings) ==="
+          kubectl get events -A --field-selector type=Warning --sort-by='.lastTimestamp' 2>/dev/null | tail -30 || true
