@@ -21,6 +21,9 @@ spec:
               kinds:
                 - Deployment
                 - StatefulSet
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: project-sentinel
       validate:
         message: >-
           All containers must have livenessProbe and readinessProbe

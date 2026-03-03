@@ -21,6 +21,9 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: project-sentinel
       validate:
         message: >-
           Privileged containers are not allowed. Containers must not
@@ -36,6 +39,9 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: project-sentinel
       validate:
         message: >-
           Host namespaces (hostNetwork, hostPID, hostIPC) are not
@@ -51,6 +57,9 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: project-sentinel
       validate:
         message: >-
           Privilege escalation is not allowed. Set

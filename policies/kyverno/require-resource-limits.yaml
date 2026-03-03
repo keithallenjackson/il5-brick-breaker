@@ -20,6 +20,9 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: project-sentinel
       validate:
         message: >-
           All containers must have CPU and memory resource limits

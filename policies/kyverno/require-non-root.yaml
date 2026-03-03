@@ -21,6 +21,9 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: project-sentinel
       exclude:
         any:
           - resources:
