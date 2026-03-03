@@ -22,6 +22,9 @@ spec:
                 - Deployment
                 - StatefulSet
                 - Service
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: project-sentinel
       validate:
         message: >-
           Labels 'app.kubernetes.io/name', 'app.kubernetes.io/part-of',
