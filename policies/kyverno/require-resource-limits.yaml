@@ -23,6 +23,12 @@ spec:
               namespaceSelector:
                 matchLabels:
                   app.kubernetes.io/part-of: project-sentinel
+      exclude:
+        any:
+          - resources:
+              selector:
+                matchLabels:
+                  acme.cert-manager.io/http01-solver: "true"
       validate:
         message: >-
           All containers must have CPU and memory resource limits
