@@ -30,6 +30,10 @@ spec:
               selector:
                 matchLabels:
                   app.kubernetes.io/component: database
+          - resources:
+              selector:
+                matchLabels:
+                  acme.cert-manager.io/http01-solver: "true"
       validate:
         message: >-
           Containers must run as non-root. Set

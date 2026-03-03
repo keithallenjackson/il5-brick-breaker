@@ -24,6 +24,12 @@ spec:
               namespaceSelector:
                 matchLabels:
                   app.kubernetes.io/part-of: project-sentinel
+      exclude:
+        any:
+          - resources:
+              selector:
+                matchLabels:
+                  acme.cert-manager.io/http01-solver: "true"
       validate:
         message: >-
           Privileged containers are not allowed. Containers must not
@@ -42,6 +48,12 @@ spec:
               namespaceSelector:
                 matchLabels:
                   app.kubernetes.io/part-of: project-sentinel
+      exclude:
+        any:
+          - resources:
+              selector:
+                matchLabels:
+                  acme.cert-manager.io/http01-solver: "true"
       validate:
         message: >-
           Host namespaces (hostNetwork, hostPID, hostIPC) are not
@@ -60,6 +72,12 @@ spec:
               namespaceSelector:
                 matchLabels:
                   app.kubernetes.io/part-of: project-sentinel
+      exclude:
+        any:
+          - resources:
+              selector:
+                matchLabels:
+                  acme.cert-manager.io/http01-solver: "true"
       validate:
         message: >-
           Privilege escalation is not allowed. Set
