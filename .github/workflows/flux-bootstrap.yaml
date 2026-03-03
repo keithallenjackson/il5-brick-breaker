@@ -66,13 +66,28 @@ jobs:
         run: flux reconcile source git brick-breaker --timeout=2m
 
       - name: Wait for infrastructure
-        run: flux reconcile kustomization brick-breaker-infrastructure --timeout=10m
+        run: |
+          echo "Waiting for infrastructure HelmReleases (ingress-nginx, cert-manager, kyverno)..."
+          kubectl wait kustomization/brick-breaker-infrastructure \
+            -n flux-system \
+            --for=condition=Ready \
+            --timeout=10m
 
-      - name: Wait for post-install (ClusterIssuers)
-        run: flux reconcile kustomization brick-breaker-post-install --timeout=5m
+      - name: Wait for post-install (ClusterIssuers + Kyverno policies)
+        run: |
+          echo "Waiting for CRD-dependent resources..."
+          kubectl wait kustomization/brick-breaker-post-install \
+            -n flux-system \
+            --for=condition=Ready \
+            --timeout=5m
 
       - name: Wait for dev environment
-        run: flux reconcile kustomization brick-breaker-dev --timeout=10m
+        run: |
+          echo "Waiting for dev deployments..."
+          kubectl wait kustomization/brick-breaker-dev \
+            -n flux-system \
+            --for=condition=Ready \
+            --timeout=10m
 
       - name: Verify deployment status
         run: |
