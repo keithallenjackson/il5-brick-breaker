@@ -22,6 +22,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: brick-breaker
+  wait: true
   timeout: 10m
 ---
 # CRD-dependent resources (ClusterIssuers require cert-manager CRDs)
